@@ -1,25 +1,20 @@
-// ==========================
-// GLOBAL STATE
-// ==========================
+//Global state
 let cartItems = [];
 let currentTotal = 0;
 let currentPaymentMethod = "";
 let availableItemsList = []; // Array to store database items for the edit dropdown
 let paymentInterval = null;  // Global variable for checking QR payment status
 
-// 🔊 Sounds
+//Sounds
 const beepSound = new Audio("/static/js/scanner-beep.mp3");
-const kachingSound = new Audio("/static/js/kaching.mp3"); // <--- ADDED KACHING SOUND HERE
+const kachingSound = new Audio("/static/js/kaching.mp3"); 
 
-// ==========================
-// PROFILE DROPDOWN
-// ==========================
+//profile dropdown
 function toggleProfileMenu() {
     const dropdown = document.getElementById('profileDropdown');
     dropdown.classList.toggle('hidden');
 }
 
-// Close the dropdown if the user clicks anywhere outside of it
 window.onclick = function(event) {
     if (!event.target.closest('.profile-wrapper')) {
         const dropdown = document.getElementById('profileDropdown');
@@ -30,13 +25,11 @@ window.onclick = function(event) {
 }
 
 function logoutStaff() {
-    // Redirects to your Flask logout route
+    // Redirects to Flask logout route
     window.location.href = '/logout'; 
 }
 
-// ==========================
-// NUMPAD INPUT
-// ==========================
+//numpad
 const inputField = document.getElementById('numpadInput');
 
 function pressKey(val) {
@@ -48,9 +41,7 @@ function clearKey() {
     inputField.value = '';
 }
 
-// ==========================
-// ADD ITEM MANUALLY (FROM DB)
-// ==========================
+//add item manually
 async function addManual() {
     const itemId = inputField.value;
 
@@ -99,9 +90,7 @@ async function addManual() {
     clearKey();
 }
 
-// ==========================
-// AUTO DETECT (YOLO + HX711)
-// ==========================
+// auto detection (yolo, hx711)
 async function detectItem() {
     const btn = document.getElementById('btnDetect');
     const originalText = btn.innerText;
@@ -138,9 +127,7 @@ async function detectItem() {
     }
 }
 
-// ==========================
-// UPDATE CART UI
-// ==========================
+//update cart
 function updateCartDisplay() {
     const cartBody = document.querySelector('.cart-body');
     const totalDisplay = document.getElementById('mainTotalDue');
@@ -185,28 +172,21 @@ function updateCartDisplay() {
     cartBody.scrollTop = cartBody.scrollHeight;
 }
 
-// ==========================
-// ROUND TO NEAREST 5 CENTS
-// ==========================
 function roundToNearest5Cents(amount){
     let roundedAmount = Math.round(amount*20)/20;
     return roundedAmount.toFixed(2);
 }
 
-// ==========================
-// ADMIN OVERRIDE HELPER
-// ==========================
+//admin override
 let adminResolve = null;
 
 function checkAdminOverride(actionName) {
     return new Promise((resolve) => {
-        // Bypass if user is already an admin
         if (typeof currentUserRole !== 'undefined' && currentUserRole.toLowerCase() === 'admin') {
             resolve(true);
             return;
         }
-
-        // Store the promise resolver so we can call it later
+        
         adminResolve = resolve;
         
         // Reset modal fields
@@ -279,9 +259,7 @@ async function submitAdminAuth() {
     }
 }
 
-// ==========================
-// DELETE ITEM
-// ==========================
+//delete item
 async function handleDeleteAction(index) {
     const isAuthorized = await checkAdminOverride('delete');
     if (isAuthorized) {
@@ -291,9 +269,7 @@ async function handleDeleteAction(index) {
     }
 }
 
-// ==========================
-// EDIT ITEM (MODAL)
-// ==========================
+//edit item
 async function fetchItemsFromDB() {
     if (availableItemsList.length > 0) return;
 
@@ -370,9 +346,7 @@ function saveEditedItem() {
     closeEditModal();
 }
 
-// ==========================
-// PAYMENT MODAL CONTROL
-// ==========================
+//payment
 function openPaymentGateway() {
     if (cartItems.length === 0) {
         alert("Cart is empty!");
@@ -410,9 +384,7 @@ function backToSelectMethod() {
     document.getElementById('pg-step-select').style.display = 'block';
 }
 
-// ==========================
-// SELECT PAYMENT
-// ==========================
+//select payment
 function selectPaymentMethod(method) {
     currentPaymentMethod = method;
 
@@ -426,9 +398,7 @@ function selectPaymentMethod(method) {
     }
 }
 
-// ==========================
-// CASH PAYMENT
-// ==========================
+//cash payment
 function validateCash() {
     const tendered = parseFloat(document.getElementById('inputTendered').value);
     const roundedTotal = parseFloat(roundToNearest5Cents(currentTotal));
@@ -443,9 +413,7 @@ function processCashPayment() {
     showSuccess(change);
 }
 
-// ==========================
-// NON-CASH (CARD)
-// ==========================
+//non cash
 function processNonCash() {
     document.getElementById('pg-step-select').style.display = 'none';
     document.getElementById('pg-step-processing').style.display = 'block';
@@ -455,9 +423,7 @@ function processNonCash() {
     }, 1500);
 }
 
-// ==========================
-// QR CODE (TOYYIBPAY) LOGIC
-// ==========================
+//qr code (toyyibpay)
 function startQRPaymentFlow() {
     let totalText = document.getElementById('modalTotalAmount').innerText;
     let amount = parseFloat(totalText.replace('RM ', '').trim());
@@ -488,13 +454,13 @@ async function generateQRPayment(amount) {
         img.id = 'qr-image';
         img.alt = 'QR Code';
         img.style.width = '100%';
-        img.style.maxWidth = '300px'; // Keeps the QR code size neat and clean
+        img.style.maxWidth = '300px'; 
         img.style.margin = '0 auto';
         img.style.display = 'block';
         img.style.borderRadius = '8px';
         
         qrImage.parentNode.replaceChild(img, qrImage);
-        qrImage = img; // Update reference
+        qrImage = img; 
     }
 
     qrImage.src = ""; 
@@ -517,7 +483,6 @@ async function generateQRPayment(amount) {
             const paymentUrl = `https://dev.toyyibpay.com/${billCode}`;
             
             // 3. GENERATE A CLEAN QR IMAGE USING A QR GENERATOR API
-            // This converts the payment link above into a pure QR code image
             const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(paymentUrl)}`;
             
             // 4. DISPLAY THE QR IMAGE ON THE SCREEN
@@ -551,7 +516,7 @@ function checkPaymentStatus(billCode) {
             if (data.status === 'paid') {
                 clearInterval(paymentInterval); // stop polling
                 
-                // 🔊 PLAY KACHING SOUND HERE ON SUCCESSFUL PAYMENT
+                //PLAY KACHING SOUND ON SUCCESSFUL PAYMENT
                 kachingSound.play().catch(error => {
                     console.log("Browser blocked audio (Autoplay Policy):", error);
                 });
@@ -559,11 +524,9 @@ function checkPaymentStatus(billCode) {
                 // Hide QR container and show success container
                 document.getElementById('qr-container').style.display = 'none';
                 document.getElementById('pg-step-success').style.display = 'block';
-                
-                // IMPORTANT: Clear any remaining change text
+        
                 document.getElementById('displayChange').innerText = ""; 
-                
-                // Important: Set payment method to QR Pay so backend saves it correctly
+    
                 currentPaymentMethod = "E-Wallet";
             }
         } catch (error) {
@@ -581,9 +544,7 @@ function cancelQRPayment() {
     document.getElementById('paymentButtonsGrid').style.display = 'grid'; 
 }
 
-// ==========================
-// SUCCESS SCREEN (FOR CASH & E-WALLET)
-// ==========================
+//success screen
 function showSuccess(change) {
     document.getElementById('pg-step-processing').style.display = 'none';
     document.getElementById('pg-step-cash').style.display = 'none';
@@ -602,9 +563,7 @@ function showSuccess(change) {
     }
 }
 
-// ==========================
-// COMPLETE TRANSACTION (SAVE DB)
-// ==========================
+//complete transaction
 async function completeTransaction() {
     try {
         const response = await fetch('/api/checkout', {
@@ -634,18 +593,13 @@ async function completeTransaction() {
     }
 }
 
-// ==========================
-// SHIFT REPORT / TODAY'S SALES
-// ==========================
+//today's sales
 function openDailySalesModal() {
-    // Hide the profile dropdown so it's not in the way
     document.getElementById('profileDropdown').classList.add('hidden');
-    
-    // Show the modal
+
     const modal = document.getElementById('dailySalesModal');
     modal.style.display = 'flex';
-    
-    // Fetch the data from the backend
+
     fetchDailySales();
 }
 
@@ -696,7 +650,6 @@ async function fetchDailySales() {
         }
     } catch (error) {
         console.error("Error fetching shift data:", error);
-        // Updated colspan to 4 here as well
         document.getElementById('shiftSalesTableBody').innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #ef4444;">Failed to load data.</td></tr>';
     }
 }
