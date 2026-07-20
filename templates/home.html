@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroScale POS - Terminal</title>
+    <link href="https://googleapis.com" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cloudflare.com"/>
+    <style>
+        /* Payment Card Styles */
+        .payment-card-new { background: #ffffff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .payment-card-new:hover { border-color: #3b82f6; background: #f0fdf4; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .payment-card-new .icon { font-size: 36px; margin-bottom: 10px; }
+        .payment-card-new .title { font-weight: 600; color: #334155; font-size: 1.1rem; }
+        
+        /* Modals Generic Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; max-width: 450px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; }
+        
+        /* Animation */
+        .pulse-dot { width: 10px; height: 10px; background-color: #3b82f6; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite; }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topbar">
+        <div class="brand">AgroScale</div>
+        
+        <div class="profile-wrapper">
+            <button class="profile-trigger" onclick="toggleProfileMenu()">
+                {% if profile_image %}
+                    <img src="{{ url_for('uploaded_file', filename=profile_image) }}" alt="Profile" class="circular-image small">
+                {% else %}
+                    <div class="staff-avatar">{{ staff_name[0] if staff_name else 'C' }}</div>
+                {% endif %}
+
+                <div class="profile-text-wrapper">
+                    <div class="staff-name">{{ staff_name if staff_name else 'Cashier' }}</div>
+                    <div class="staff-role-badge">{{ 'Cashier' if staff_role == 'Staff' else staff_role }}</div>
+                </div>
+            </button>
+
+            <div id="profileDropdown" class="profile-dropdown hidden">
+                <div class="staff-details">
+                    <h4>User Information</h4>
+                    <div class="info-row"><span class="info-label">Name:</span><span class="info-value">{{ staff_name if staff_name else 'Cashier' }}</span></div>
+                    <div class="info-row"><span class="info-label">Role:</span><span class="info-value" style="text-transform: capitalize;">{{ staff_role if staff_role else 'Cashier' }}</span></div>
+                </div>
+                <div class="dropdown-footer" style="display: flex; flex-direction: column; gap: 8px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                    <button onclick="openDailySalesModal()" class="btn-shift-report" style="padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%;">Today's Sales</button>
+                    <button onclick="logoutStaff()" class="btn-logout" style="padding: 10px; background: #fee2e2; border: none; border-radius: 8px; color: #ef4444; font-weight: 600; cursor: pointer; width: 100%;">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pos-layout">
+        <div class="left-panel">
+            <div class="camera-container">
+                <div class="live-tag"><div class="live-dot"></div> LIVE CAM</div>
+                <img src="{{ url_for('video_feed') }}" onerror="this.src='https://via.placeholder.com/800x450?text=Camera+Offline'">
+            </div>
+            <button class="btn-detect" id="btnDetect" onclick="detectItem()">Detect Item Automatically</button>
+        </div>
+
+        <div class="right-panel">
+            <div class="cart-wrapper">
+                <div class="cart-header">
+                    <span>Item Name</span>
+                    <span style="text-align:right;">Weight</span>
+                    <span style="text-align:right;">Price</span>
+                    <span style="text-align:center;">Action</span>
+                </div>
+                <div class="cart-body">
+                    <div class="empty-state">
+                        <p>No items added yet.</p>
+                        <p style="font-size: 0.75rem; margin-top: 5px;">Use camera or enter Item ID.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-numpad-area">
+                <input type="text" id="numpadInput" class="pos-input text-right" placeholder="Enter Item ID" readonly>
+                <div class="horizontal-keypad">
+                    <div class="keypad-row">
+                        <button class="num-btn" onclick="pressKey('1')">1</button>
+                        <button class="num-btn" onclick="pressKey('2')">2</button>
+                        <button class="num-btn" onclick="pressKey('3')">3</button>
+                        <button class="num-btn" onclick="pressKey('4')">4</button>
+                        <button class="num-btn" onclick="pressKey('5')">5</button>
+                        <button class="action-btn clear-btn" onclick="clearKey()">CLEAR</button>
+                    </div>
+                    <div class="keypad-row">
+                        <button class="num-btn" onclick="pressKey('6')">6</button>
+                        <button class="num-btn" onclick="pressKey('7')">7</button>
+                        <button class="num-btn" onclick="pressKey('8')">8</button>
+                        <button class="num-btn" onclick="pressKey('9')">9</button>
+                        <button class="num-btn" onclick="pressKey('0')">0</button>
+                        <button class="num-btn" onclick="pressKey('.')">.</button>
+                        <button class="action-btn add-btn" onclick="addManual()">ADD</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkout-area">
+                <div class="total-display">
+                    <span class="total-label">Total Amount</span>
+                    <span class="total-value" id="mainTotalDue">RM 0.00</span>
+                </div>
+                <button class="btn-pay" onclick="openPaymentGateway()">Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="paymentGateway" class="modal-overlay">
+        <div class="modal-content"> 
+            <div id="pg-step-select">
+                <div class="modal-header">
+                    <h3 style="font-size: 1.25rem;">Checkout Payment</h3>
+                    <button class="close-modal" onclick="closePaymentGateway()">×</button>
+                </div>
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 25px;">
+                    <span style="color: #64748b; font-size: 0.9rem; font-weight: 600; text-transform: uppercase;">Total Due</span>
+                    <h2 id="modalTotalAmount" style="margin: 5px 0 0; color: #0f172a; font-size: 2.5rem;">RM 0.00</h2>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;" id="paymentButtonsGrid">
+                    <div class="payment-card-new" onclick="selectPaymentMethod('Cash')">
+                        <div class="title">Cash</div>
+                    </div>
+                    <div class="payment-card-new" onclick="startQRPaymentFlow()">
+                        <div class="title">E-Wallet</div>
+                    </div>
+                </div>
+
+                <div id="qr-container" style="display: none; text-align: center; margin-top: 25px; padding-top: 25px; border-top: 1px solid #e2e8f0;">
+                    <h4 style="margin: 0 0 5px; color: #1e293b;">Scan with e-Wallet</h4>
+                    <p style="margin: 0 0 20px; color: #64748b; font-size: 0.85rem;">Supports TNG eWallet</p>
+                    <div style="background: white; padding: 12px; border-radius: 16px; display: inline-block; border: 1px solid #e2e8f0;">
+                        <img id="qr-image" src="" alt="QR Code" width="220" height="220" style="display: block; border-radius: 8px;">
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 20px;">
+                        <div class="pulse-dot"></div>
+                        <p id="qr-status" style="color: #3b82f6; font-weight: 600; margin: 0;">Waiting for payment...</p>
+                    </div>
+                    <button onclick="cancelQRPayment()" style="background: transparent; color: #ef4444; border: 1px solid #fca5a5; border-radius: 8px; padding: 10px 20px; font-weight: 600; margin-top: 20px; cursor: pointer; width: 100%;">Cancel Payment</button>
+                </div>
+            </div>
+
+            <div id="pg-step-cash" style="display:none;">
+                <div class="modal-header">
+                    <h3 style="font-size: 1.25rem;">Cash Payment</h3>
+                    <button class="close-modal" onclick="backToSelectMethod()">↺</button>
+                </div>
+                <div style="padding: 15px 0;">
+                    <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600;">Amount Tendered:</label>
+                    <input type="number" id="inputTendered" placeholder="RM 0.00" oninput="validateCash()" class="pos-input text-right" style="font-size: 1.5rem; padding: 15px; font-weight: bold; width: 100%; border-radius: 10px;">
+                </div>
+                <button id="btnConfirmCash" class="btn-pay" onclick="processCashPayment()" disabled style="margin-top: 10px; padding: 15px; border-radius: 10px; width: 100%;">Confirm Payment</button>
+            </div>
+
+            <div id="pg-step-processing" style="display:none; text-align:center; padding: 40px 0;">
+                <div class="pulse-dot" style="width: 20px; height: 20px; margin-bottom: 20px;"></div>
+                <h3>Processing Payment...</h3>
+                <p>Please wait.</p>
+            </div>
+            
+            <div id="pg-step-success" style="display:none; text-align:center; padding: 20px 0;">
+                <div style="width: 70px; height: 70px; background: #dcfce3; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <h3 style="color: #16a34a; font-size: 1.5rem; margin-bottom: 10px;">Payment Successful!</h3>
+                <p id="displayChange" style="margin: 15px 0; font-size: 1.25rem; font-weight: 600; color: #334155; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px dashed #cbd5e1;"></p>
+                <button class="btn-pay" onclick="completeTransaction()" style="margin-top: 20px; padding: 15px; background: #16a34a; border-radius: 10px; width: 100%;">Complete Transaction</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminAuthModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Admin Authorization</h3>
+                <button class="close-modal" onclick="closeAdminAuthModal()">×</button>
+            </div>
+            <p style="margin-bottom: 15px; color: #64748b; font-size: 0.9rem;">Please authorize to <strong id="adminAuthActionText" style="color: #ef4444;">action</strong>.</p>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Admin ID</label>
+                <input type="text" id="adminIdInput" class="pos-input" placeholder="Enter Admin ID" autocomplete="off" style="width: 100%;">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Password</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="password" id="adminPasswordInput" class="pos-input" placeholder="Enter Password" autocomplete="off"  style="width: 100%;">
+                    <button id="togglePasswordBtn" onclick="togglePasswordVisibility()" style="padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; cursor: pointer;">Show</button>
+                </div>
+            </div>
+            
+            <button onclick="submitAdminAuth()" style="width: 100%; padding: 12px; background: #0f172a; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Authorize</button>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Edit Item</h3>
+                <button class="close-modal" onclick="closeEditModal()">×</button>
+            </div>
+            <input type="hidden" id="editItemIndex">
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Select New Item</label>
+                <select id="editItemSelect" class="pos-input" style="width: 100%; padding: 10px;"></select>
+                <p style="font-size: 0.8rem; color: #64748b; margin-top: 5px;">* Weight will remain the same. Price will automatically recalculate.</p>
+            </div>
+            
+            <button onclick="saveEditedItem()" style="width: 100%; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Save Changes</button>
+        </div>
+    </div>
+
+    <div id="dailySalesModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="modal-header">
+                <h3>Today's Sales Report</h3>
+                <button class="close-modal" onclick="closeDailySalesModal()">×</button>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 10px; text-align: center;">
+                    <span style="color: #16a34a; font-weight: 600; font-size: 0.9rem;">Total Earnings</span>
+                    <h2 id="shiftTotalAmount" style="margin: 5px 0 0; color: #14532d;">RM 0.00</h2>
+                </div>
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 15px; border-radius: 10px; text-align: center;">
+                    <span style="color: #2563eb; font-weight: 600; font-size: 0.9rem;">Transactions</span>
+                    <h2 id="shiftTransactionCount" style="margin: 5px 0 0; color: #1e3a8a;">0</h2>
+                </div>
+            </div>
+
+            <div style="max-height: 300px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                        <tr>
+                            <th style="padding: 10px 15px; color: #64748b; font-weight: 600;">Receipt ID</th>
+                            <th style="padding: 10px 15px; color: #64748b; font-weight: 600;">Method</th>
+                            <th style="padding: 10px 15px; color: #64748b; font-weight: 600; text-align: right;">Amount</th>
+                            <th style="padding: 10px 15px; color: #64748b; font-weight: 600; text-align: center;">Receipt</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shiftSalesTableBody">
+                        <tr><td colspan="4" style="text-align: center; padding: 20px;">Loading data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const currentUserRole = "{{ staff_role }}";
+        const currentStaffName = "{{ staff_name }}";
+    </script>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

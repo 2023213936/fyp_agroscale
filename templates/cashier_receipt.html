@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroScale - Cashier Receipt</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-main: #F4F6F8;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+            --border-light: #E5E7EB;
+            --sidebar-accent: #10B981;
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
+                            0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --radius-md: 12px;
+        }
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:'Inter',sans-serif;
+        }
+
+        body{
+            background:var(--bg-main);
+            color:var(--text-main);
+            min-height:100vh;
+        }
+
+        /* =========================
+           TOP HEADER
+        ========================= */
+
+        .topbar{
+            height:70px;
+            background:white;
+            border-bottom:1px solid var(--border-light);
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding:0 32px;
+        }
+
+        .topbar-left{
+            display:flex;
+            align-items:center;
+            gap:16px;
+        }
+
+        .btn-back-icon{
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            width:38px;
+            height:38px;
+            border-radius:50%;
+            color:var(--text-muted);
+            text-decoration:none;
+            transition:0.2s;
+        }
+
+        .btn-back-icon:hover{
+            background:var(--bg-main);
+            color:var(--text-main);
+        }
+
+        .page-title{
+            font-size:1.2rem;
+            font-weight:600;
+        }
+
+        .cashier-badge{
+            background:rgba(16,185,129,0.12);
+            color:var(--sidebar-accent);
+            padding:10px 16px;
+            border-radius:8px;
+            font-size:0.85rem;
+            font-weight:600;
+            border:1px solid rgba(16,185,129,0.2);
+        }
+
+        /* =========================
+           PAGE CONTENT
+        ========================= */
+
+        .page-content{
+            padding:32px;
+        }
+
+        .action-header{
+            width:100%;
+            max-width:850px;
+            margin:0 auto 24px auto;
+            display:flex;
+            justify-content:flex-end;
+        }
+
+        .btn{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:10px 18px;
+            border-radius:8px;
+            border:1px solid var(--border-light);
+            background:white;
+            cursor:pointer;
+            font-size:0.85rem;
+            font-weight:600;
+            transition:0.2s;
+        }
+
+        .btn:hover{
+            background:var(--bg-main);
+        }
+
+        /* =========================
+           RECEIPT CARD
+        ========================= */
+
+        .receipt-card{
+            background:white;
+            width:100%;
+            max-width:850px;
+            margin:0 auto;
+            border-radius:var(--radius-md);
+            box-shadow:var(--shadow-card);
+            border:1px solid var(--border-light);
+            overflow:hidden;
+            position:relative;
+        }
+
+        .paid-ribbon{
+            position:absolute;
+            top:24px;
+            right:-35px;
+            background:var(--sidebar-accent);
+            color:white;
+            padding:8px 40px;
+            transform:rotate(45deg);
+            font-weight:700;
+            font-size:0.75rem;
+            letter-spacing:1px;
+        }
+
+        .receipt-inner{
+            padding:40px 50px;
+        }
+
+        .receipt-header-top{
+            display:flex;
+            justify-content:space-between;
+            margin-bottom:30px;
+        }
+
+        .brand-section h1{
+            color:var(--sidebar-accent);
+            font-size:1.8rem;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            margin-bottom:5px;
+            font-weight:700;
+        }
+
+        .invoice-label{
+            text-align:right;
+            margin-right:20px;
+        }
+
+        .invoice-label h2{
+            font-size:1.5rem;
+            text-transform:uppercase;
+            margin-bottom:4px;
+        }
+
+        .invoice-label p{
+            color:var(--sidebar-accent);
+            font-weight:600;
+            font-family:monospace;
+            font-size:1.1rem;
+        }
+
+        /* =========================
+           INFO GRID
+        ========================= */
+
+        .info-grid{
+            display:grid;
+            grid-template-columns:repeat(3,1fr);
+            gap:20px;
+            padding:24px 0;
+            border-top:1px dashed var(--border-light);
+            border-bottom:1px dashed var(--border-light);
+            margin-bottom:30px;
+        }
+
+        .info-item label{
+            display:block;
+            font-size:0.75rem;
+            text-transform:uppercase;
+            color:var(--text-muted);
+            font-weight:700;
+            margin-bottom:8px;
+            letter-spacing:0.5px;
+        }
+
+        .info-item span{
+            font-size:0.95rem;
+            font-weight:600;
+        }
+
+        /* =========================
+           TABLE
+        ========================= */
+
+       .items-table{
+            width:100%;
+            border-collapse:collapse;
+            margin-bottom:30px;
+            table-layout:fixed;
+        }
+
+        .items-table th{
+            text-align:left;
+            padding:12px 10px;
+            color:var(--text-muted);
+            font-size:0.75rem;
+            text-transform:uppercase;
+            border-bottom:2px solid var(--bg-main);
+            font-weight:700;
+        }
+
+        .items-table td{
+            padding:16px 10px;
+            border-bottom:1px solid var(--bg-main);
+            font-size:0.95rem;
+            vertical-align:middle;
+        }
+
+        .text-right{
+            text-align:right;
+        }
+
+        /* =========================
+           SUMMARY
+        ========================= */
+
+        .summary-wrapper{
+            display:flex;
+            justify-content:flex-end;
+            padding-top:10px;
+        }
+
+        .summary-box{
+            width:320px;
+            background:var(--bg-main);
+            padding:24px;
+            border-radius:var(--radius-md);
+            border:1px solid var(--border-light);
+        }
+
+        .summary-row{
+            display:flex;
+            justify-content:space-between;
+            padding:8px 0;
+            font-size:0.95rem;
+            color:var(--text-muted);
+            font-weight:500;
+        }
+
+        .summary-row span:last-child{
+            color:var(--text-main);
+            font-weight:600;
+        }
+
+        .summary-row.total{
+            border-top:2px dashed var(--border-light);
+            margin-top:12px;
+            padding-top:16px;
+            font-weight:700;
+            font-size:1.25rem;
+            color:var(--sidebar-accent);
+        }
+
+        .summary-row.total span{
+            color:var(--sidebar-accent);
+        }
+
+        .footer-note{
+            margin-top:40px;
+            text-align:center;
+            color:var(--text-muted);
+            font-size:0.85rem;
+            border-top:1px solid var(--bg-main);
+            padding-top:24px;
+        }
+
+        @media print{
+            .topbar,
+            .action-header{
+                display:none;
+            }
+
+            body{
+                background:white;
+            }
+
+            .page-content{
+                padding:0;
+            }
+
+            .receipt-card{
+                box-shadow:none;
+                border:none;
+                max-width:100%;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="topbar">
+
+        <div class="topbar-left">
+
+            <a href="{{ url_for('home') }}" class="btn-back-icon">
+                <svg width="24" height="24"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </a>
+
+            <h1 class="page-title">
+                Receipt Detail
+            </h1>
+
+        </div>
+
+        <div class="cashier-badge">
+            Cashier Terminal
+        </div>
+
+    </header>
+
+    <!-- CONTENT -->
+    <div class="page-content">
+
+        <div class="action-header">
+
+            <button class="btn" onclick="window.print()">
+
+                <svg width="16"
+                     height="16"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2">
+                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                    <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+
+                Print Receipt
+
+            </button>
+
+        </div>
+
+        <div class="receipt-card">
+
+            <div class="paid-ribbon">
+                PAID
+            </div>
+
+            <div class="receipt-inner">
+
+                <div class="receipt-header-top">
+
+                    <div class="brand-section">
+
+                        <h1>
+                            <svg width="32"
+                                 height="32"
+                                 viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2.5">
+                                <path d="M12 2v20"/>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
+
+                            AgroScale
+                        </h1>
+
+                    </div>
+
+                    <div class="invoice-label">
+
+                        <h2>Receipt</h2>
+
+                        <p>
+                            #{{ receipt.receiptsId }}
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <!-- INFO -->
+                <div class="info-grid">
+
+                    <div class="info-item">
+                        <label>Date & Time</label>
+                        <span>{{ receipt.created_at }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <label>Payment Method</label>
+                        <span style="color:#2563EB;">
+                            {{ receipt.payment_method }}
+                        </span>
+                    </div>
+
+                    <div class="info-item">
+                        <label>Cashier / Staff</label>
+                        <span>
+                            {{ receipt.staffName }}
+                            (ID: {{ receipt.staffId }})
+                        </span>
+                    </div>
+
+                </div>
+
+   <!-- ITEMS TABLE -->
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40%; text-align: left;">Description</th>
+                            <th style="width: 20%; text-align: right;">Weight (KG)</th>
+                            <th style="width: 20%; text-align: right;">Price/KG (RM)</th>
+                            <th style="width: 20%; text-align: right;">Amount (RM)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td style="text-align: left; font-weight: 600;">
+                                {{ item.itemName }}
+                            </td>
+                            <td style="text-align: right;">
+                                {{ "%.3f"|format(item.weight) }}
+                            </td>
+                            <td style="text-align: right;">
+                                {{ "%.2f"|format(item.unitPrice) }}
+                            </td>
+                            <td style="text-align: right; font-weight: 600;">
+                                {{ "%.2f"|format(item.weight * item.unitPrice) }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- SUMMARY -->
+                <div class="summary-wrapper">
+
+                    <div class="summary-box">
+
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span>
+                                RM {{ "%.2f"|format(receipt.total_amount) }}
+                            </span>
+                        </div>
+
+                        <div class="summary-row">
+                            <span>Service Tax (0%)</span>
+                            <span>RM 0.00</span>
+                        </div>
+
+                        <div class="summary-row total">
+                            <span>GRAND TOTAL</span>
+
+                            <span>
+                                RM {{ "%.2f"|format(receipt.total_amount) }}
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- FOOTER -->
+                <div class="footer-note">
+
+                    <p>AgroScale Receipts System.</p>
+
+                    <p style="margin-top:5px;
+                              font-weight:600;
+                              color:var(--text-main);">
+                        AgroScale - Empowering Modern Agriculture
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

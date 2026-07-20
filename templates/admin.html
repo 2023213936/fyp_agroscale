@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroScale - Admin Dashboard</title>
+    <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        /* ==================== COLOR VARIABLES ==================== */
+        :root {
+            --sidebar-bg: #1A1C23;
+            --sidebar-hover: #2D303E;
+            --sidebar-text: #9CA3AF;
+            --sidebar-active: #FFFFFF;
+            --sidebar-accent: #10B981;
+
+            --bg-main: #F4F6F8;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+            --border-light: #E5E7EB;
+
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius-md: 12px;
+        }
+
+        /* ==================== STRICT NO-SCROLL LAYOUT ==================== */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        
+        body { 
+            height: 100vh; 
+            width: 100vw; 
+            overflow: hidden; 
+            display: flex; 
+            background-color: var(--bg-main);
+            color: var(--text-main);
+        }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            border-right: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .sidebar-header {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #FFFFFF;
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar-menu {
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .menu-item:hover { background-color: var(--sidebar-hover); color: #FFFFFF; }
+        .menu-item.active { background-color: var(--sidebar-hover); color: var(--sidebar-active); border-left: 3px solid var(--sidebar-accent); }
+        .menu-item svg { width: 18px; height: 18px; opacity: 0.8; }
+        .menu-item.active svg { opacity: 1; color: var(--sidebar-accent); }
+
+        .cashier-mode-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 16px;
+            margin-top: auto;
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--sidebar-accent);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 1px solid var(--sidebar-accent);
+            transition: all 0.2s ease;
+        }
+
+        .cashier-mode-btn:hover {
+            background-color: var(--sidebar-accent);
+            color: #FFFFFF;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        /* ==================== MAIN CONTENT ==================== */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        /* TOPBAR */
+        .topbar {
+            height: 70px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            flex-shrink: 0;
+        }
+
+        .page-title { font-size: 1.1rem; font-weight: 600; color: var(--text-main); }
+
+        /* PROFILE DROPDOWN */
+        .profile-wrapper { position: relative; }
+        .profile-trigger {
+            display: flex; align-items: center; gap: 12px; background: none; border: none; cursor: pointer; padding: 6px; border-radius: 8px; transition: background 0.2s;
+        }
+        .profile-trigger:hover { background: var(--bg-main); }
+        
+        .avatar {
+            width: 36px; height: 36px; border-radius: 50%; background-color: var(--sidebar-bg); color: #FFF; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem; object-fit: cover;
+        }
+        
+        .user-info { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: var(--text-main); }
+        .user-role { font-size: 0.75rem; color: var(--text-muted); }
+
+        .dropdown-menu {
+            position: absolute; top: calc(100% + 10px); right: 0; width: 200px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid var(--border-light); display: none; z-index: 100; padding: 8px;
+        }
+        .dropdown-menu.show { display: block; }
+        
+        .logout-btn {
+            display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; color: #DC2626; text-decoration: none; font-size: 0.85rem; font-weight: 500; border-radius: 6px; transition: 0.2s;
+        }
+        .logout-btn:hover { background-color: #FEF2F2; }
+
+        /* ==================== DASHBOARD GRID ==================== */
+        .dashboard-content {
+            flex: 1;
+            padding: 24px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            min-height: 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            flex-shrink: 0; 
+        }
+
+        .stat-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            outline: none;
+            border-radius: var(--radius-md);
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            padding: 24px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 100%;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .stat-link:hover .stat-card {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: #D1D5DB;
+        }
+
+        .stat-info h3 { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .stat-info p { font-size: 1.8rem; font-weight: 700; color: var(--text-main); line-height: 1; }
+        
+        .stat-icon-wrapper {
+            width: 54px; height: 54px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+        }
+        .bg-blue { background-color: #EFF6FF; color: #3B82F6; }
+        .bg-purple { background-color: #F5F3FF; color: #8B5CF6; }
+        .bg-green { background-color: #ECFDF5; color: #10B981; }
+
+        /* ==================== CHART AREA ==================== */
+        .chart-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            flex: 1; 
+            min-height: 0; 
+        }
+
+        /* Add this code to create a 2-column grid for the charts */
+        .charts-wrapper {
+            display: grid;
+            grid-template-columns: 2fr 1fr; /* Line chart takes 2/3, Bar chart takes 1/3 of the space */
+            gap: 24px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .chart-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .chart-header h2 { font-size: 1rem; font-weight: 600; color: var(--text-main); }
+
+        .filter-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* CALENDAR DATE PICKER */
+        .calendar-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .calendar-input {
+            padding: 6px 12px 6px 32px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-main);
+            background-color: var(--card-bg);
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .calendar-input:focus {
+            border-color: var(--sidebar-accent);
+        }
+
+        .calendar-icon {
+            position: absolute;
+            left: 10px;
+            width: 14px;
+            height: 14px;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .filter-group { 
+            display: flex; 
+            background: var(--bg-main); 
+            border-radius: 6px; 
+            padding: 4px; 
+        }
+        
+        .filter-btn {
+            background: transparent; 
+            border: none; 
+            padding: 6px 14px; 
+            font-size: 0.8rem; 
+            font-weight: 500; 
+            color: var(--text-muted); 
+            border-radius: 4px; 
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .filter-btn:hover {
+            color: var(--text-main);
+        }
+
+        .filter-btn.active { 
+            background: var(--card-bg); 
+            color: var(--text-main); 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
+        }
+
+        .canvas-container {
+            flex: 1; 
+            padding: 20px;
+            position: relative; 
+            min-height: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="{{ url_for('admin_dashboard') }}" class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--sidebar-accent);"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                AgroScale
+            </a>
+        </div>
+        <nav class="sidebar-menu">
+            <a href="{{ url_for('admin_dashboard') }}" class="menu-item active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                Dashboard
+            </a>
+            <a href="{{ url_for('registered_items') }}" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                Inventory Items
+            </a>
+            <a href="{{ url_for('staff_list') }}" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Manage Staff
+            </a>
+            <a href="{{ url_for('receipts_list') }}" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Transactions
+            </a>
+            
+            <a href="{{ url_for('profile') }}" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Profile
+            </a>
+            
+            <a href="{{ url_for('home') }}" class="cashier-mode-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                    <line x1="8" y1="21" x2="16" y2="21"/>
+                    <line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+                Cashier Mode
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-wrapper">
+        
+        <header class="topbar">
+            <h1 class="page-title">Overview</h1>
+            
+            <div class="profile-wrapper">
+                <button class="profile-trigger" onclick="toggleMenu(event)">
+                    <div class="user-info">
+                        <span class="user-name">{{ current_user.get('staffName', 'Admin') }}</span>
+                        <span class="user-role">Administrator</span>
+                    </div>
+                    {% if current_user and current_user.get('profile_image') %}
+                        <img src="{{ url_for('uploaded_file', filename=current_user.get('profile_image')) }}" alt="Profile" class="avatar">
+                    {% else %}
+                        <div class="avatar">{{ current_user.get('staffName', 'A')[0] }}</div>
+                    {% endif %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+
+                <div id="dropdownMenu" class="dropdown-menu">
+                    <a href="{{ url_for('logout') }}" class="logout-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        Logout Session
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            
+            <div class="stats-grid">
+                
+                <a href="{{ url_for('registered_items') }}" class="stat-link" title="View Inventory">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3>Total Items</h3>
+                            <p>{{ items|length | default('0') }}</p>
+                        </div>
+                        <div class="stat-icon-wrapper bg-blue">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/></svg>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('staff_list') }}" class="stat-link" title="View Staff">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3>Active Staff</h3>
+                            <p>{{ staff_count | default('0') }}</p>
+                        </div>
+                        <div class="stat-icon-wrapper bg-purple">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('receipts_list') }}" class="stat-link" title="View Transactions">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3>Total Receipts</h3>
+                            <p>{{ transactions_count | default('0') }}</p>
+                        </div>
+                        <div class="stat-icon-wrapper bg-green">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        </div>
+                    </div>
+                </a>
+                
+            </div>
+
+            <div class="charts-wrapper">
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h2 id="chartTitle">Revenue Overview (Daily)</h2>
+                        <div class="filter-controls">
+                            <div class="calendar-wrapper">
+                                <svg class="calendar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                <input type="date" id="calendarFilter" class="calendar-input" onchange="fetchChartData()">
+                            </div>
+                            <div class="filter-group">
+                                <button class="filter-btn active" onclick="setPeriod('day', event)">Day</button>
+                                <button class="filter-btn" onclick="setPeriod('week', event)">Week</button>
+                                <button class="filter-btn" onclick="setPeriod('month', event)">Month</button>
+                                <button class="filter-btn" onclick="setPeriod('year', event)">Year</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="canvas-container">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                    <div id="chartData" data-dates='{{ chart_dates | tojson | safe }}' data-totals='{{ chart_totals | tojson | safe }}' style="display: none;"></div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h2>Payment Comparison</h2>
+                        <div class="filter-controls">
+                            <div class="calendar-wrapper">
+                                <svg class="calendar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                <input type="date" id="paymentCalendar" class="calendar-input" onchange="fetchPaymentData()">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="canvas-container">
+                        <canvas id="paymentChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+            
+        </div>
+    </main>
+
+<script>
+        // Global variables for charts and current selected period
+        let salesChart;
+        let paymentChart;
+        let currentPeriod = 'day';
+
+        // Helper function to convert "YYYY-W15" into a readable date range
+        function getWeekDateRange(year, week) {
+            // Week 1 in ISO usually contains Jan 4th
+            const d = new Date(year, 0, 4);
+            const dayNum = d.getDay() || 7; 
+            
+            // Set to Monday of the selected week
+            d.setDate(d.getDate() - dayNum + 1 + (week - 1) * 7); 
+            
+            // Set end date to Sunday
+            const endD = new Date(d);
+            endD.setDate(d.getDate() + 6); 
+            
+            // Format dates (e.g., "13 Apr 2026")
+            const options = { day: 'numeric', month: 'short', year: 'numeric' };
+            return `${d.toLocaleDateString('en-GB', options)} - ${endD.toLocaleDateString('en-GB', options)}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Automatically set both calendars to today's date upon loading
+            document.getElementById('calendarFilter').valueAsDate = new Date();
+            document.getElementById('paymentCalendar').valueAsDate = new Date();
+
+            // ==========================================
+            // 1. SETUP REVENUE OVERVIEW (LINE CHART)
+            // ==========================================
+            const ctxSales = document.getElementById('salesChart').getContext('2d');
+            const chartDataEl = document.getElementById('chartData');
+            
+            // Fetch initial data rendered by the backend (Jinja templates)
+            const dates = JSON.parse(chartDataEl.getAttribute('data-dates'));
+            const totals = JSON.parse(chartDataEl.getAttribute('data-totals'));
+
+            // Create a gradient fill for the line chart
+            let gradient = ctxSales.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(16, 185, 129, 0.2)'); 
+            gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+            salesChart = new Chart(ctxSales, {
+                type: 'line',
+                data: {
+                    labels: dates.length > 0 ? dates : ['No Data'],
+                    datasets: [{
+                        label: 'Revenue (RM)',
+                        data: totals.length > 0 ? totals : [0],
+                        borderColor: '#10B981', 
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#FFFFFF',
+                        pointBorderColor: '#10B981',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        fill: true,
+                        tension: 0.3 
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, 
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1F2937',
+                            titleFont: { size: 13, family: 'Inter', weight: 'normal' },
+                            bodyFont: { size: 15, family: 'Inter', weight: 'bold' },
+                            padding: 14,
+                            displayColors: false,
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const rawLabel = tooltipItems[0].label;
+                                    
+                                    // Format weekly labels
+                                    if (currentPeriod === 'week' && rawLabel.includes('-W')) {
+                                        const parts = rawLabel.split('-W');
+                                        if (parts.length === 2) {
+                                            const year = parseInt(parts[0], 10);
+                                            const week = parseInt(parts[1], 10);
+                                            return `Week ${week}: ${getWeekDateRange(year, week)}`;
+                                        }
+                                    }
+                                    return rawLabel;
+                                },
+                                label: function(context) { 
+                                    return 'Total Sales: RM ' + context.parsed.y.toFixed(2); 
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            border: { display: false },
+                            grid: { color: '#F3F4F6', drawTicks: false }, 
+                            ticks: { font: { family: 'Inter', size: 12 }, color: '#9CA3AF', padding: 10 } 
+                        },
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { font: { family: 'Inter', size: 12 }, color: '#9CA3AF', padding: 10 } 
+                        }
+                    }
+                }
+            });
+
+            // ==========================================
+            // 2. SETUP PAYMENT COMPARISON (BAR CHART)
+            // ==========================================
+            const ctxPayment = document.getElementById('paymentChart').getContext('2d');
+            paymentChart = new Chart(ctxPayment, {
+                type: 'bar',
+                data: {
+                    labels: ['Cash', 'E-Wallet'],
+                    datasets: [{
+                        label: 'Total (RM)',
+                        data: [0, 0],
+                        backgroundColor: ['#3B82F6', '#10B981'], // Blue for Cash, Green for QR
+                        borderRadius: 6,
+                        barThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1F2937',
+                            titleFont: { size: 13, family: 'Inter', weight: 'normal' },
+                            bodyFont: { size: 14, family: 'Inter', weight: 'bold' },
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) { 
+                                    return 'RM ' + context.parsed.y.toFixed(2); 
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            border: { display: false },
+                            grid: { color: '#F3F4F6', drawTicks: false }, 
+                            ticks: { font: { family: 'Inter', size: 12 }, color: '#9CA3AF', padding: 10 } 
+                        },
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { font: { family: 'Inter', size: 12 }, color: '#9CA3AF' } 
+                        }
+                    }
+                }
+            });
+
+            // Fetch data for the payment comparison chart on initial load
+            fetchPaymentData();
+        });
+
+        // ==========================================
+        // DATA FETCHING FUNCTIONS
+        // ==========================================
+
+        // Fetch data for the Payment Comparison (Bar Chart)
+        function fetchPaymentData() {
+            const selectedDate = document.getElementById('paymentCalendar').value;
+            
+            fetch(`/admin/api/payment_methods?date=${selectedDate}`)
+                .then(response => response.json())
+                .then(data => {
+                    paymentChart.data.labels = data.labels;
+                    paymentChart.data.datasets[0].data = data.totals;
+                    paymentChart.update();
+                })
+                .catch(error => console.error("Error fetching payment data:", error));
+        }
+
+        // Fetch data for the Revenue Overview (Line Chart)
+        function fetchChartData() {
+            const selectedDate = document.getElementById('calendarFilter').value;
+            
+            fetch(`/admin/api/sales_data?period=${currentPeriod}&date=${selectedDate}`)
+                .then(response => response.json())
+                .then(data => {
+                    salesChart.data.labels = data.dates;
+                    salesChart.data.datasets[0].data = data.totals;
+                    salesChart.update();
+                })
+                .catch(error => console.error("Error fetching chart data:", error));
+        }
+
+        // ==========================================
+        // UI INTERACTION FUNCTIONS
+        // ==========================================
+
+        // Handle switching between Day/Week/Month/Year filters
+        function setPeriod(period, event) {
+            currentPeriod = period;
+            
+            // Highlight the clicked button
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update Chart Title based on selection
+            const titleMap = {
+                'day': 'Revenue Overview (Daily)',
+                'week': 'Revenue Overview (Weekly)',
+                'month': 'Revenue Overview (Monthly)',
+                'year': 'Revenue Overview (Yearly)'
+            };
+            document.getElementById('chartTitle').innerText = titleMap[period];
+
+            // Fetch new data when the period changes
+            fetchChartData();
+        }
+
+        // Standard profile dropdown toggle
+        function toggleMenu(e) {
+            e.stopPropagation();
+            document.getElementById('dropdownMenu').classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function(e) {
+            if (!e.target.closest('.profile-wrapper')) {
+                const dropdown = document.getElementById('dropdownMenu');
+                if (dropdown && dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

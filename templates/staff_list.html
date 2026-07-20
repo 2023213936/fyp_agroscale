@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroScale - Staff Management</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        /* ==================== COLOR VARIABLES ==================== */
+        :root {
+            --sidebar-bg: #1A1C23;
+            --sidebar-hover: #2D303E;
+            --sidebar-text: #9CA3AF;
+            --sidebar-active: #FFFFFF;
+            --sidebar-accent: #10B981;
+
+            --bg-main: #F4F6F8;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+            --border-light: #E5E7EB;
+
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --radius-md: 12px;
+        }
+
+        /* ==================== STRICT NO-SCROLL LAYOUT ==================== */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        
+        body { 
+            height: 100vh; 
+            width: 100vw; 
+            overflow: hidden;
+            display: flex; 
+            background-color: var(--bg-main);
+            color: var(--text-main);
+        }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            border-right: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .sidebar-header {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #FFFFFF;
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar-menu {
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .menu-item:hover { background-color: var(--sidebar-hover); color: #FFFFFF; }
+        .menu-item.active { background-color: var(--sidebar-hover); color: var(--sidebar-active); border-left: 3px solid var(--sidebar-accent); }
+        .menu-item svg { width: 18px; height: 18px; opacity: 0.8; }
+        .menu-item.active svg { opacity: 1; color: var(--sidebar-accent); }
+
+        /* ==================== MAIN CONTENT ==================== */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        /* TOPBAR */
+         .topbar {
+            height: 70px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            flex-shrink: 0;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+         .page-title { font-size: 1.1rem; font-weight: 600; color: var(--text-main); }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+       /* Cashier Mode Button Area */
+      .sidebar-bottom {
+            padding: 24px 16px;
+            margin-top: auto;
+        }
+
+        .btn-cashier {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 16px;
+            margin-top: auto;
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--sidebar-accent);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 1px solid var(--sidebar-accent);
+            transition: all 0.2s ease;
+        }
+
+        .btn-cashier:hover {
+            background-color: var(--sidebar-accent);
+            color: #FFFFFF;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        /* PROFILE DROPDOWN */
+        .profile-wrapper { position: relative; }
+        .profile-trigger {
+            display: flex; align-items: center; gap: 12px; background: none; border: none; cursor: pointer; padding: 6px; border-radius: 8px; transition: background 0.2s;
+        }
+        .profile-trigger:hover { background: var(--bg-main); }
+        
+        .avatar {
+            width: 36px; height: 36px; border-radius: 50%; background-color: var(--sidebar-bg); color: #FFF; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem; object-fit: cover;
+        }
+        
+        .user-info { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: var(--text-main); }
+        .user-role { font-size: 0.75rem; color: var(--text-muted); }
+
+        .dropdown-menu {
+            position: absolute; top: calc(100% + 10px); right: 0; width: 200px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid var(--border-light); display: none; z-index: 100; padding: 8px;
+        }
+        .dropdown-menu.show { display: block; }
+        
+        .logout-btn {
+            display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; color: #DC2626; text-decoration: none; font-size: 0.85rem; font-weight: 500; border-radius: 6px; transition: 0.2s;
+        }
+        .logout-btn:hover { background-color: #FEF2F2; }
+
+        /* ==================== PAGE CONTENT ==================== */
+        .page-content {
+            flex: 1;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            min-height: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .action-group-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        /* SEARCH BAR */
+        .search-wrapper { position: relative; width: 300px; }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+        .search-input {
+            width: 100%; padding: 10px 12px 10px 40px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 0.9rem; color: var(--text-main); background-color: var(--card-bg); outline: none; transition: all 0.2s; box-shadow: var(--shadow-card);
+        }
+        .search-input:focus { border-color: var(--sidebar-accent); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+
+        /* BUTTONS */
+        .btn-add {
+            display: flex; align-items: center; gap: 8px; background-color: var(--sidebar-accent); color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
+        .btn-add:hover { background-color: #059669; transform: translateY(-1px); }
+
+         .btn-back {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            color: var(--text-muted);
+            text-decoration: none;
+            background-color: transparent;
+            transition: all 0.2s ease;
+        }
+
+        .btn-back:hover {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+        }
+
+        /* ==================== TABLE AREA ==================== */
+        .table-container {
+            background-color: var(--card-bg); border-radius: var(--radius-md); border: 1px solid var(--border-light); box-shadow: var(--shadow-card); display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden;
+        }
+
+        .table-scroll-area { flex: 1; overflow-y: auto; }
+
+        .admin-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .admin-table thead th {
+            position: sticky; top: 0; background-color: #F9FAFB; color: var(--text-muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 16px 24px; border-bottom: 1px solid var(--border-light); z-index: 10;
+        }
+        .admin-table tbody td { padding: 16px 24px; border-bottom: 1px solid var(--border-light); color: var(--text-main); font-size: 0.9rem; vertical-align: middle; }
+        .admin-table tbody tr:hover { background-color: #F9FAFB; }
+        .admin-table tbody tr:last-child td { border-bottom: none; }
+
+        /* TABLE SPECIFIC STYLES */
+        .table-photo-column { width: 80px; text-align: center; }
+        .circular-image { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-light); }
+        .default-icon-placeholder { background-color: var(--bg-main); display: flex; align-items: center; justify-content: center; color: var(--text-muted); border-radius: 50%; width: 40px; height: 40px; border: 1px solid var(--border-light); }
+        
+        .id-badge { background-color: var(--bg-main); color: var(--text-muted); padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 0.85rem; border: 1px solid var(--border-light); }
+        .staff-name { font-weight: 600; color: var(--text-main); }
+        
+        .role-badge { padding: 4px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
+        .role-cashier { background-color: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
+        .role-admin { background-color: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; }
+
+        /* TABLE BUTTONS */
+        .action-btns { display: flex; gap: 8px; justify-content: flex-end; }
+        .btn-icon { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; border: none; cursor: pointer; transition: all 0.2s; background: transparent; }
+        .btn-edit { color: #3B82F6; background-color: #EFF6FF; }
+        .btn-edit:hover { background-color: #DBEAFE; }
+        .btn-delete { color: #DC2626; background-color: #FEF2F2; }
+        .btn-delete:hover { background-color: #FEE2E2; }
+
+        /* ==================== MODAL ==================== */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(17, 24, 39, 0.4); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card-bg); padding: 32px; border-radius: var(--radius-md); width: 100%; max-width: 450px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); border: 1px solid var(--border-light); animation: slideUp 0.3s ease-out; max-height: 90vh; overflow-y: auto;
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .modal-content h2 { font-size: 1.25rem; font-weight: 600; color: var(--text-main); margin-bottom: 24px; text-align: center; }
+
+        /* MODAL PHOTO UPLOAD */
+        .modal-form-top { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; }
+        .profile-image-container { position: relative; width: 90px; height: 90px; margin-bottom: 12px; }
+        .profile-image-container .circular-image { width: 100%; height: 100%; border: 3px solid var(--bg-main); box-shadow: var(--shadow-card); }
+        .profile-image-container .default-icon-placeholder { width: 100%; height: 100%; border: 3px solid var(--bg-main); }
+        .btn-upload { padding: 6px 14px; background-color: var(--bg-main); color: var(--text-main); border: 1px solid var(--border-light); border-radius: 6px; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: 0.2s; }
+        .btn-upload:hover { background-color: #E5E7EB; }
+
+        /* FORM INPUTS */
+        .form-row { display: flex; gap: 12px; }
+        .form-row .form-group { flex: 1; }
+        
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+        .form-group label { font-size: 0.85rem; font-weight: 500; color: var(--text-main); }
+        .form-group input, .form-group select { 
+            padding: 10px 14px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 0.95rem; outline: none; transition: border-color 0.2s; background-color: var(--card-bg); color: var(--text-main);
+        }
+        .form-group input:focus, .form-group select:focus { border-color: var(--sidebar-accent); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+        .form-group input[readonly] { background-color: var(--bg-main); color: var(--text-muted); cursor: not-allowed; }
+
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-light); }
+        .btn-cancel { background-color: var(--bg-main); color: var(--text-main); border: 1px solid var(--border-light); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 0.9rem; transition: 0.2s; }
+        .btn-cancel:hover { background-color: #E5E7EB; }
+        .btn-save { background-color: var(--sidebar-accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 0.9rem; transition: 0.2s; }
+        .btn-save:hover { background-color: #059669; }
+
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="{{ url_for('admin_dashboard') }}" class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--sidebar-accent);"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                AgroScale
+            </a>
+        </div>
+        <nav class="sidebar-menu">
+            <a href="{{ url_for('admin_dashboard') }}" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                Dashboard
+            </a>
+            <a href="{{ url_for('registered_items') }}" class="menu-item ">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                Inventory Items
+            </a>
+            <a href="{{ url_for('staff_list') }}" class="menu-item active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Manage Staff
+            </a>
+            <a href="{{ url_for('receipts_list') }}" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Transactions
+            </a>
+            <a href="{{ url_for('profile') }}" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                Profile
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <a href="{{ url_for('home') }}" class="btn-cashier">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                Cashier Mode
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-wrapper">
+        
+        <header class="topbar">
+            <div class="topbar-left">
+                <a href="{{ url_for('admin_dashboard') }}" class="btn-back" title="Back To Dashboard">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                </a>
+                <h1 class="page-title">Manage Staff</h1>
+            </div>
+            
+            <div class="topbar-right">
+                <div class="profile-wrapper">
+                    <button class="profile-trigger" onclick="toggleMenu(event)">
+                        <div class="user-info">
+                            <span class="user-name">{{ current_user.get('staffName', 'Admin') if current_user else 'Admin' }}</span>
+                            <span class="user-role">Administrator</span>
+                        </div>
+                        {% if current_user and current_user.get('profile_image') %}
+                            <img src="{{ url_for('uploaded_file', filename=current_user.get('profile_image')) }}" alt="Profile" class="avatar">
+                        {% else %}
+                            <div class="avatar">{{ current_user.get('staffName', 'A')[0] if current_user else 'A' }}</div>
+                        {% endif %}
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+
+                    <div id="dropdownMenu" class="dropdown-menu">
+                        <a href="{{ url_for('logout') }}" class="logout-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                            Logout Session
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="page-content">
+            
+            <div class="header-actions">
+                <div class="search-wrapper">
+                    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search by Staff ID or Name..." onkeyup="filterTable()">
+                </div>
+
+                <div class="action-group-right">
+                    <button class="btn-add" onclick="openStaffModal()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Add New Staff
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-scroll-area">
+                    <table class="admin-table" id="staffTable">
+                        <thead>
+                            <tr>
+                                <th class="table-photo-column">Photo</th>
+                                <th>Staff ID</th>
+                                <th>Full Name</th>
+                                <th>Gender</th>
+                                <th>Role</th>
+                                <th>Password</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in staff %}
+                            <tr class="staff-row">
+                                <td class="table-photo-column">
+                                    {% if s.profile_image %}
+                                        <img src="{{ url_for('uploaded_file', filename=s.profile_image) }}" alt="Photo" class="circular-image">
+                                    {% else %}
+                                        <div class="default-icon-placeholder">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td><span class="id-badge">{{ s.staffId }}</span></td>
+                                <td class="staff-name">{{ s.staffName }}</td>
+                                <td>{{ s.gender }}</td>
+                                <td>
+                                    <span class="role-badge {% if s.role == 'Admin' %}role-admin{% else %}role-cashier{% endif %}">
+                                        {{ s.role }}
+                                    </span>
+                                </td>
+                                <td style="color: var(--text-muted); font-family: monospace;">{{ s.password }}</td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button class="btn-icon btn-edit" title="Edit Staff" onclick="openStaffModal('{{ s.staffId }}', '{{ s.staffName }}', '{{ s.password }}', '{{ s.gender }}', '{{ s.role }}', '{{ s.profile_image }}')">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                        </button>
+                                        
+                                        <form action="{{ url_for('delete_staff', staff_id=s.staffId) }}" method="POST" style="display:inline; margin:0;">
+                                            <button type="submit" class="btn-icon btn-delete" title="Delete Staff" onclick="return confirm('Are you sure you want to delete {{ s.staffName }}?')">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr id="emptyStateRow">
+                                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px 0;">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5" style="margin-bottom: 12px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><br>
+                                    No staff members found in the database.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="staffFormModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="modalTitle">Add New Staff</h2>
+            <form id="staffForm" method="POST" action="{{ url_for('save_staff') }}" enctype="multipart/form-data">
+                <input type="hidden" id="originalStaffId" name="originalStaffId">
+                
+                <div class="modal-form-top">
+                    <div class="profile-image-container">
+                        <img id="profileImagePreview" src="" alt="Preview" class="circular-image" style="display: none;">
+                        <div id="imagePlaceholder" class="default-icon-placeholder">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        </div>
+                    </div>
+                    <label for="profilePhotoInput" class="btn-upload">Upload Photo</label>
+                    <input type="file" id="profilePhotoInput" name="profilePhoto" accept="image/png, image/jpeg, image/gif" style="display:none;" onchange="previewImage(event)">
+                </div>
+
+                <div class="form-group" id="staffIdGroup" style="display: none;">
+                    <label>Staff ID</label>
+                    <input type="text" id="staffId" name="staffId" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="staffName" name="staffName" autocomplete="off" placeholder="e.g. Ahmad Albab" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select id="gender" name="gender" required>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select id="role" name="role" required>
+                            <option value="Cashier">Cashier</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="text" id="password" name="password" autocomplete="off" placeholder="Set user password" required>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeStaffModal()">Cancel</button>
+                    <button type="submit" class="btn-save">Save Staff</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Profile Dropdown logic
+        function toggleMenu(e) {
+            e.stopPropagation();
+            document.getElementById('dropdownMenu').classList.toggle('show');
+        }
+
+        window.onclick = function(e) {
+            if (!e.target.closest('.profile-wrapper')) {
+                const dropdown = document.getElementById('dropdownMenu');
+                if (dropdown.classList.contains('show')) dropdown.classList.remove('show');
+            }
+        }
+
+        // Live Table Search Logic
+        function filterTable() {
+            let input = document.getElementById("searchInput");
+            let filter = input.value.toUpperCase();
+            let table = document.getElementById("staffTable");
+            let tr = table.getElementsByClassName("staff-row");
+
+            for (let i = 0; i < tr.length; i++) {
+                let tdId = tr[i].getElementsByTagName("td")[1]; // Column 2: ID
+                let tdName = tr[i].getElementsByTagName("td")[2]; // Column 3: Name
+                
+                if (tdId || tdName) {
+                    let txtValueId = tdId.textContent || tdId.innerText;
+                    let txtValueName = tdName.textContent || tdName.innerText;
+                    
+                    if (txtValueId.toUpperCase().indexOf(filter) > -1 || txtValueName.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+
+        // Modal Logic
+        function openStaffModal(id = '', name = '', password='', gender = 'Male', role = 'Cashier', profileImage = '') {
+            document.getElementById('staffFormModal').style.display = 'flex';
+            
+            const previewImg = document.getElementById('profileImagePreview');
+            const placeholder = document.getElementById('imagePlaceholder');
+
+            if(id) {
+                document.getElementById('modalTitle').innerText = 'Edit Staff';
+                document.getElementById('originalStaffId').value = id; 
+                document.getElementById('staffIdGroup').style.display = 'flex';
+                document.getElementById('staffId').value = id;
+                document.getElementById('staffName').value = name;
+                document.getElementById('gender').value = gender;
+                document.getElementById('role').value = role; 
+                document.getElementById('password').value = password;
+                
+                if (profileImage && profileImage !== 'None') {
+                    previewImg.src = "/uploads/" + profileImage;
+                    previewImg.style.display = 'block';
+                    placeholder.style.display = 'none';
+                } else {
+                    previewImg.style.display = 'none';
+                    placeholder.style.display = 'flex';
+                }
+            } else {
+                document.getElementById('modalTitle').innerText = 'Add New Staff';
+                document.getElementById('originalStaffId').value = '';
+                document.getElementById('staffIdGroup').style.display = 'none';
+                document.getElementById('staffId').value = '';
+                document.getElementById('staffForm').reset();
+                previewImg.style.display = 'none';
+                placeholder.style.display = 'flex';
+            }
+        }
+
+        function closeStaffModal() { 
+            document.getElementById('staffFormModal').style.display = 'none'; 
+        }
+
+        // Image Preview Logic
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profileImagePreview').src = e.target.result;
+                    document.getElementById('profileImagePreview').style.display = 'block';
+                    document.getElementById('imagePlaceholder').style.display = 'none';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+description: Ultralytics YOLO11s model trained on /content/data.yaml
+author: Ultralytics
+date: '2026-07-13T02:13:17.840043'
+version: 8.4.78
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+batch: 1
+imgsz:
+- 640
+- 640
+names:
+  0: Apple
+  1: Carrot
+  2: Chilli
+  3: Key_Lime
+  4: Lemongrass
+  5: Oranges
+  6: Tomatoes
+args:
+  batch: 1
+  half: false
+channels: 3
+end2end: false

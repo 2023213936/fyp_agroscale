@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroScale - Transaction Receipts</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        /* ==================== COLOR VARIABLES ==================== */
+        :root {
+            --sidebar-bg: #1A1C23;
+            --sidebar-hover: #2D303E;
+            --sidebar-text: #9CA3AF;
+            --sidebar-active: #FFFFFF;
+            --sidebar-accent: #10B981;
+
+            --bg-main: #F4F6F8;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+            --border-light: #E5E7EB;
+
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --radius-md: 12px;
+        }
+
+        /* ==================== STRICT NO-SCROLL LAYOUT ==================== */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        
+        body { 
+            height: 100vh; 
+            width: 100vw; 
+            overflow: hidden;
+            display: flex; 
+            background-color: var(--bg-main);
+            color: var(--text-main);
+        }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            border-right: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .sidebar-header {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #FFFFFF;
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar-menu {
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .menu-item:hover { background-color: var(--sidebar-hover); color: #FFFFFF; }
+        .menu-item.active { background-color: var(--sidebar-hover); color: var(--sidebar-active); border-left: 3px solid var(--sidebar-accent); }
+        .menu-item svg { width: 18px; height: 18px; opacity: 0.8; }
+        .menu-item.active svg { opacity: 1; color: var(--sidebar-accent); }
+
+        /* Sidebar Bottom & Cashier Button */
+        .sidebar-bottom {
+            padding: 24px 16px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        
+       .btn-cashier {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 16px;
+            margin-top: auto;
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--sidebar-accent);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 1px solid var(--sidebar-accent);
+            transition: all 0.2s ease;
+        }
+
+        .btn-cashier:hover {
+            background-color: var(--sidebar-accent);
+            color: #FFFFFF;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        /* ==================== MAIN CONTENT ==================== */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        /* TOPBAR */
+        .topbar {
+            height: 70px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            flex-shrink: 0;
+        }
+
+        /* Topbar Left & Back Icon */
+        .topbar-left {
+            display: flex; align-items: center; gap: 16px;
+        }
+        
+        .btn-back-icon {
+            display: flex; 
+	    align-items: center; 
+	    justify-content: center;
+            width: 36px; 
+	    height: 36px; 
+	    border-radius: 50%;
+            color: var(--text-muted);
+	    text-decoration: none;
+	    background-color:transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-back-icon:hover { 
+	    background-color: var(--bg-main);
+	    color: var(--text-main);
+	 }
+
+        .page-title { font-size: 1.1rem; font-weight: 600; color: var(--text-main); }
+
+        /* PROFILE DROPDOWN */
+        .profile-wrapper { position: relative; }
+        .profile-trigger {
+            display: flex; align-items: center; gap: 12px; background: none; border: none; cursor: pointer; padding: 6px; border-radius: 8px; transition: background 0.2s;
+        }
+        .profile-trigger:hover { background: var(--bg-main); }
+        
+        .avatar {
+            width: 36px; height: 36px; border-radius: 50%; background-color: var(--sidebar-bg); color: #FFF; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem; object-fit: cover;
+        }
+        
+        .user-info { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: var(--text-main); }
+        .user-role { font-size: 0.75rem; color: var(--text-muted); }
+
+        .dropdown-menu {
+            position: absolute; top: calc(100% + 10px); right: 0; width: 200px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid var(--border-light); display: none; z-index: 100; padding: 8px;
+        }
+        .dropdown-menu.show { display: block; }
+        
+        .logout-btn {
+            display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; color: #DC2626; text-decoration: none; font-size: 0.85rem; font-weight: 500; border-radius: 6px; transition: 0.2s;
+        }
+        .logout-btn:hover { background-color: #FEF2F2; }
+
+        /* ==================== PAGE CONTENT ==================== */
+        .page-content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* TABS UI */
+        .month-tabs-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+        
+        .month-tabs-container::-webkit-scrollbar { height: 6px; }
+        .month-tabs-container::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+
+        .month-tab-btn {
+            padding: 10px 24px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .month-tab-btn:hover {
+            background: var(--bg-main);
+            color: var(--text-main);
+        }
+
+        .month-tab-btn.active {
+            background: var(--sidebar-accent);
+            color: #FFFFFF;
+            border-color: var(--sidebar-accent);
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+        }
+
+        .month-pane { display: none; }
+        .month-pane.active { display: block; animation: fadeIn 0.3s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* DAY ACCORDIONS (Inside Panes) */
+        .date-group {
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-card);
+            overflow: hidden;
+        }
+
+        .date-header {
+            display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; cursor: pointer; list-style: none;
+        }
+        .date-header::-webkit-details-marker { display: none; }
+
+        .left-sec { display: flex; align-items: center; gap: 12px; }
+        .date-label { font-weight: 600; font-size: 1.05rem; color: var(--text-main); }
+        .badge-count { background: var(--bg-main); color: var(--text-muted); padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; }
+        .icon-chevron { color: var(--text-muted); transition: transform 0.3s ease; }
+        details[open] .icon-chevron { transform: rotate(180deg); }
+
+        /* SEARCH INSIDE TAB */
+        .inner-filter-wrapper {
+            padding: 12px 24px; background: var(--bg-main); border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); display: flex; justify-content: flex-end; align-items: center; gap: 10px;
+        }
+        .inner-search-input {
+            padding: 10px 14px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 0.85rem; width: 300px; outline: none; background: var(--card-bg);
+        }
+        .inner-search-input:focus { border-color: var(--sidebar-accent); }
+
+        /* TABLE */
+        .admin-table { width: 100%; border-collapse: collapse; }
+        .admin-table th { text-align: left; padding: 12px 24px; background: var(--card-bg); border-bottom: 1px solid var(--border-light); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; font-weight: 600; }
+        .admin-table td { padding: 16px 24px; border-bottom: 1px solid var(--border-light); color: var(--text-main); font-size: 0.95rem; }
+
+        /* BADGES */
+        .pay-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; }
+        .pay-cash { background-color: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
+        .pay-qr, .pay-card, .pay-online { background-color: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; }
+        .pay-ewallet { background-color: #FEF3C7; color: #D97706; border: 1px solid #FDE68A; }
+
+        .btn-view { color: var(--sidebar-accent); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .btn-view:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="{{ url_for('admin_dashboard') }}" class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--sidebar-accent);"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                AgroScale
+            </a>
+        </div>
+        <nav class="sidebar-menu">
+            <a href="{{ url_for('admin_dashboard') }}" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                Dashboard
+            </a>
+            <a href="{{ url_for('registered_items') }}" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                Inventory Items
+            </a>
+            <a href="{{ url_for('staff_list') }}" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Manage Staff
+            </a>
+            <a href="{{ url_for('receipts_list') }}" class="menu-item active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Transactions
+            </a>
+            <a href="{{ url_for('profile') }}" class="menu-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Profile
+            </a>
+        </nav>
+        
+        <div class="sidebar-bottom">
+            <a href="{{ url_for('home') }}" class="btn-cashier">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                Cashier Mode
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-wrapper">
+        
+        <header class="topbar">
+            <div class="topbar-left">
+                <a href="{{ url_for('admin_dashboard') }}" class="btn-back-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </a>
+                <h1 class="page-title">Transaction Receipts</h1>
+            </div>
+            
+            <div class="profile-wrapper">
+                <button class="profile-trigger" onclick="toggleMenu(event)">
+                    <div class="user-info">
+                        <span class="user-name">{{ current_user.get('staffName', 'Admin') if current_user else 'Admin' }}</span>
+                        <span class="user-role">Administrator</span>
+                    </div>
+                    {% if current_user and current_user.get('profile_image') %}
+                        <img src="{{ url_for('uploaded_file', filename=current_user.get('profile_image')) }}" alt="Profile" class="avatar">
+                    {% else %}
+                        <div class="avatar">{{ current_user.get('staffName', 'A')[0] if current_user else 'A' }}</div>
+                    {% endif %}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+
+                <div id="dropdownMenu" class="dropdown-menu">
+                    <a href="{{ url_for('logout') }}" class="logout-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        Logout Session
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="page-content">
+
+            <div class="global-filter-bar" style="display: flex; gap: 16px; margin-bottom: 24px; align-items: flex-end; background: var(--card-bg); padding: 16px 24px; border-radius: var(--radius-md); border: 1px solid var(--border-light); box-shadow: var(--shadow-card);">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <input type="date" id="globalDateFilter" class="inner-search-input" style="width: 200px;" onchange="applyGlobalDateFilter()">
+                </div>
+                <button onclick="clearDateFilter()" style="padding: 10px 16px; background: var(--bg-main); border: 1px solid var(--border-light); border-radius: 6px; cursor: pointer; font-weight: 600; color: var(--text-main); font-size: 0.85rem; height: 40px; transition: 0.2s;">
+                    Clear Filter
+                </button>
+            </div>
+            <div id="monthTabsContainer" class="month-tabs-container"></div>
+
+            <template id="receiptDataTemplate">
+                {% for receipt in receipts %}
+                <div class="raw-receipt-item"
+                     data-datekey="{{ receipt.created_at.split(' ')[0] }}" 
+                     data-time="{{ receipt.created_at }}"
+                     data-staff="{{ receipt.staffName or receipt.staffId }}"
+                     data-method="{{ receipt.payment_method }}"
+                     data-total="{{ "%.2f"|format(receipt.total_amount) }}"
+                     data-viewurl="{{ url_for('view_receipt', receipt_id=receipt['receiptsId']) }}">
+                </div>
+                {% endfor %}
+            </template>
+
+            <div id="panesContainer"></div>
+
+        </div>
+    </main>
+
+    <script>
+        // Dropdown Logic
+        function toggleMenu(e) {
+            e.stopPropagation();
+            document.getElementById('dropdownMenu').classList.toggle('show');
+        }
+
+        window.onclick = function(e) {
+            if (!e.target.closest('.profile-wrapper')) {
+                const dropdown = document.getElementById('dropdownMenu');
+                if (dropdown.classList.contains('show')) dropdown.classList.remove('show');
+            }
+        }
+
+        // Logic to Group by Month Tabs, then by Day
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTabsAndPanes();
+        });
+
+        function renderTabsAndPanes() {
+            const items = document.getElementById('receiptDataTemplate').content.querySelectorAll('.raw-receipt-item');
+            const tabsContainer = document.getElementById('monthTabsContainer');
+            const panesContainer = document.getElementById('panesContainer');
+            
+            if (items.length === 0) {
+                panesContainer.innerHTML = `<div style="text-align:center; padding:60px; color:var(--text-muted); background:var(--card-bg); border-radius:var(--radius-md);">No records found.</div>`;
+                return;
+            }
+
+            const tree = {};
+            const orderedMonths = []; 
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+            // 1. Build Data Tree: Month -> Day -> Receipts
+            items.forEach(item => {
+                const data = item.dataset;
+                const fullDate = data.datekey; // YYYY-MM-DD
+                const [year, month, day] = fullDate.split('-');
+                const monthKey = `${year}-${month}`; 
+                const monthLabel = `${monthNames[parseInt(month) - 1]} ${year}`;
+
+                // Setup Month Level
+                if (!tree[monthKey]) {
+                    tree[monthKey] = { label: monthLabel, days: {} };
+                    orderedMonths.push(monthKey); 
+                }
+
+                // Setup Day Level
+                if (!tree[monthKey].days[fullDate]) {
+                    tree[monthKey].days[fullDate] = [];
+                }
+
+                // Push Receipt
+                tree[monthKey].days[fullDate].push(data);
+            });
+
+            orderedMonths.sort().reverse(); // Newest month first
+
+            let tabsHTML = '';
+            let panesHTML = '';
+
+            // 2. Generate HTML
+            orderedMonths.forEach((mKey, index) => {
+                const isActive = index === 0 ? 'active' : '';
+                const monthData = tree[mKey];
+                
+                // Create Tab Button
+                tabsHTML += `<button class="month-tab-btn ${isActive}" onclick="switchTab('${mKey}')" id="tab-btn-${mKey}">${monthData.label}</button>`;
+
+                // Create Content Pane
+                panesHTML += `
+                <div class="month-pane ${isActive}" id="pane-${mKey}">
+                    <div class="inner-filter-wrapper">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" class="inner-search-input" placeholder="Search cashier, method, or time inside ${monthData.label}..." onkeyup="filterInsidePane(this, '${mKey}')">
+                    </div>
+                `;
+
+                // Sort Days Descending
+                const orderedDays = Object.keys(monthData.days).sort().reverse();
+
+                orderedDays.forEach(dayDate => {
+                    const dailyReceipts = monthData.days[dayDate];
+                    
+                    panesHTML += `
+                    <details class="date-group">
+                        <summary class="date-header">
+                            <div class="left-sec">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--sidebar-accent)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                <span class="date-label">${dayDate}</span>
+                                <span class="badge-count">${dailyReceipts.length} Transactions</span>
+                            </div>
+                            <svg class="icon-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        
+                        <div>
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Cashier</th>
+                                        <th>Method</th>
+                                        <th>Total</th>
+                                        <th style="text-align: right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${dailyReceipts.map(r => {
+                                        const timePart = r.time.split(' ')[1] || r.time;
+                                        return `
+                                        <tr class="searchable-row">
+                                            <td style="font-family: monospace; font-size: 0.9rem;">${timePart}</td>
+                                            <td style="font-weight: 500;">${r.staff}</td>
+                                            <td><span class="pay-badge pay-${r.method.toLowerCase().replace(/[\s-]/g, '')}">${r.method}</span></td>
+                                            <td style="font-weight: 600;">RM ${r.total}</td>
+                                            <td style="text-align: right;">
+                                                <a href="${r.viewurl}" class="btn-view">View Detail</a>
+                                            </td>
+                                        </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </details>
+                    `;
+                });
+
+                panesHTML += `</div>`; // Close month pane
+            });
+
+            tabsContainer.innerHTML = tabsHTML;
+            panesContainer.innerHTML = panesHTML;
+        }
+
+        // Handle Tab Switching
+        function switchTab(selectedMonthKey) {
+            // Remove active class from all tabs and panes
+            document.querySelectorAll('.month-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.month-pane').forEach(pane => pane.classList.remove('active'));
+
+            // Add active class to selected
+            document.getElementById(`tab-btn-${selectedMonthKey}`).classList.add('active');
+            document.getElementById(`pane-${selectedMonthKey}`).classList.add('active');
+        }
+
+        // Search logic inside the active pane
+        function filterInsidePane(inputElement, monthKey) {
+            let filter = inputElement.value.toUpperCase();
+            let pane = document.getElementById(`pane-${monthKey}`);
+            
+            // Search through rows
+            let rows = pane.querySelectorAll("tbody tr.searchable-row");
+            rows.forEach(row => {
+                row.style.display = row.innerText.toUpperCase().includes(filter) ? "" : "none";
+            });
+
+            // Hide empty day accordions if all rows inside are hidden
+            let dayGroups = pane.querySelectorAll(".date-group");
+            dayGroups.forEach(group => {
+                let visibleRows = Array.from(group.querySelectorAll("tbody tr")).filter(r => r.style.display !== "none");
+                group.style.display = visibleRows.length > 0 ? "block" : "none";
+            });
+        }
+
+        // ==================== CALENDAR FILTER LOGIC ====================
+        function applyGlobalDateFilter() {
+            const dateInput = document.getElementById('globalDateFilter').value; // Format: YYYY-MM-DD
+            const allTabs = document.querySelectorAll('.month-tab-btn');
+            const allGroups = document.querySelectorAll('.date-group');
+            
+            // If the input is cleared, reset the view
+            if (!dateInput) {
+                allTabs.forEach(tab => tab.style.display = '');
+                allGroups.forEach(group => {
+                    group.style.display = 'block';
+                    group.open = false; // Close accordions on reset
+                });
+                
+                // Click the first available tab to reset the view gracefully
+                if (allTabs.length > 0) allTabs[0].click();
+                return;
+            }
+
+            // Extract Year and Month to find the right tab
+            const [year, month, day] = dateInput.split('-');
+            const monthKey = `${year}-${month}`;
+
+            let tabFound = false;
+
+            // 1. Filter Tabs
+            allTabs.forEach(tab => {
+                if (tab.id === `tab-btn-${monthKey}`) {
+                    tab.style.display = ''; // Show matching month tab
+                    tab.click();            // Programmatically switch to it
+                    tabFound = true;
+                } else {
+                    tab.style.display = 'none'; // Hide other months
+                }
+            });
+
+            // 2. Filter Days within the matching month
+            if (tabFound) {
+                const activePane = document.getElementById(`pane-${monthKey}`);
+                const groups = activePane.querySelectorAll('.date-group');
+                
+                groups.forEach(group => {
+                    const dateLabel = group.querySelector('.date-label').innerText;
+                    
+                    if (dateLabel === dateInput) {
+                        group.style.display = 'block'; // Show the exact day
+                        group.open = true;             // Auto-expand the accordion
+                    } else {
+                        group.style.display = 'none';  // Hide other days
+                    }
+                });
+            } else {
+                // Optional: If you select a date that has zero receipts entirely
+                // the UI will naturally just show no tabs, indicating no data.
+            }
+        }
+
+        function clearDateFilter() {
+            document.getElementById('globalDateFilter').value = '';
+            applyGlobalDateFilter(); // Re-run with empty value to reset
+        }
+
+    </script>
+</body>
+</html>

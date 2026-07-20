@@ -1,0 +1,607 @@
+/* =========================
+   GLOBAL STYLE
+========================= */
+:root {
+    --primary: #0f766e;
+    --primary-dark: #115e59;
+    --primary-light: #ccfbf1;
+    --bg-body: #f1f5f9;
+    --bg-panel: #ffffff;
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    --border: #e2e8f0;
+    --danger: #ef4444;
+    --danger-light: #fee2e2;
+    --warning: #f59e0b;
+    --warning-light: #fef3c7;
+    --success: #10b981;
+    --total-bg: #1e293b;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+    user-select: none;
+}
+
+body {
+    background-color: var(--bg-body);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* =========================
+   TOPBAR
+========================= */
+.topbar {
+    height: 65px;
+    background: white;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 25px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.brand {
+    font-weight: 700;
+    color: var(--primary-dark);
+    font-size: 20px;
+}
+
+/* =========================
+   PROFILE DROPDOWN (UPDATED)
+========================= */
+.profile-wrapper { 
+    position: relative; 
+    display: inline-block; 
+}
+
+.profile-trigger {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #ffffff;
+    border: 1px solid #1f2937; /* Garisan kotak gelap macam Admin */
+    cursor: pointer;
+    padding: 6px 16px 6px 8px; /* Ruang dalam butang yang lebih seimbang */
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.profile-trigger:hover {
+    background: var(--bg-body);
+}
+
+.staff-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--primary-dark); /* Guna warna gelap sikit biar padan */
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.circular-image.small {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover; /* Pastikan gambar tak herot/tertarik */
+    border: 1px solid var(--border);
+}
+
+.profile-text-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.staff-name {
+    font-weight: 700;
+    color: var(--text-main);
+    font-size: 14px;
+    line-height: 1.2;
+}
+
+.staff-role-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: 100%; right: 0;
+    width: 250px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    margin-top: 10px;
+    overflow: hidden;
+    z-index: 999;
+    border: 1px solid var(--border);
+}
+
+.profile-dropdown.hidden { 
+    display: none; 
+}
+
+.staff-details { 
+    padding: 20px; 
+}
+
+.staff-details h4 { 
+    margin: 0 0 15px 0; 
+    color: var(--text-main); 
+    border-bottom: 1px solid var(--border); 
+    padding-bottom: 10px; 
+    font-size: 14px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 13px;
+}
+
+.info-label { color: var(--text-muted); }
+.info-value { color: var(--text-main); font-weight: 600; }
+
+.dropdown-footer {
+    padding: 15px;
+    background: #f8fafc;
+    border-top: 1px solid var(--border);
+}
+
+.btn-logout {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    background: var(--danger-light);
+    color: var(--danger);
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-logout:hover { background: #fecaca; }
+
+/* =========================
+   MAIN LAYOUT
+========================= */
+.pos-layout {
+    display: flex;
+    flex: 1;
+    padding: 20px;
+    gap: 20px;
+    overflow: hidden;
+}
+
+/* =========================
+   LEFT PANEL (CAMERA)
+========================= */
+.left-panel {
+    flex: 0.45;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+
+.camera-container {
+    flex: 1;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.camera-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.live-tag {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #ef4444;
+    border-radius: 50%;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+.btn-detect {
+    margin-top: 15px;
+    padding: 18px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-detect:hover {
+    background: var(--primary-dark);
+}
+
+.btn-detect:disabled {
+    background: var(--text-muted);
+    cursor: not-allowed;
+}
+
+/* =========================
+   RIGHT PANEL
+========================= */
+.right-panel {
+    flex: 0.55;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+/* =========================
+   CART
+========================= */
+.cart-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.cart-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 90px;
+    padding: 15px 20px;
+    background: #f8fafc;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+}
+
+.cart-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 20px;
+}
+
+.cart-item-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 90px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    font-size: 15px;
+}
+
+.cart-item-name {
+    text-transform: capitalize;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.cart-item-weight {
+    text-align: right;
+    color: var(--text-muted);
+}
+
+.cart-item-price {
+    text-align: right;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.cart-item-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.btn-icon-edit {
+    background: var(--warning-light);
+    color: var(--warning);
+}
+.btn-icon-edit:hover { background: #fde68a; }
+
+.btn-icon-delete {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+.btn-icon-delete:hover { background: #fecaca; }
+
+.empty-state {
+    text-align: center;
+    color: var(--text-muted);
+    margin-top: 60px;
+    font-size: 16px;
+}
+
+/* =========================
+   NEW HORIZONTAL NUMPAD
+========================= */
+.input-numpad-area {
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    background: #f8fafc;
+}
+
+.pos-input {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 15px;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    outline: none;
+}
+
+select.pos-input {
+    appearance: menulist;
+    cursor: pointer;
+}
+
+.pos-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.text-right { text-align: right; }
+
+.horizontal-keypad {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.keypad-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.num-btn {
+    flex: 1;
+    padding: 15px 0;
+    font-size: 18px;
+    font-weight: 600;
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.num-btn:hover { background-color: var(--bg-body); }
+.num-btn:active { transform: scale(0.96); }
+
+.action-btn {
+    flex: 1.5;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.action-btn:active { transform: scale(0.96); }
+
+.clear-btn {
+    background-color: var(--danger-light);
+    color: var(--danger);
+    border: 1px solid #fca5a5;
+}
+
+.clear-btn:hover { background-color: #fecaca; }
+
+.add-btn {
+    background-color: var(--primary);
+    color: white;
+    border: 1px solid var(--primary-dark);
+}
+
+.add-btn:hover { background-color: var(--primary-dark); }
+
+/* =========================
+   CHECKOUT
+========================= */
+.checkout-area {
+    background: var(--total-bg);
+    padding: 20px;
+}
+
+.total-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    margin-bottom: 15px;
+}
+
+.total-label {
+    font-size: 18px;
+    font-weight: 500;
+    color: #94a3b8;
+}
+
+.total-value {
+    color: var(--success);
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.btn-pay {
+    width: 100%;
+    padding: 18px;
+    background: var(--success);
+    border: none;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-pay:hover:not(:disabled) { background: #059669; }
+.btn-pay:disabled {
+    background: var(--text-muted);
+    cursor: not-allowed;
+}
+
+/* =========================
+   MODAL
+========================= */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 450px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3 { color: var(--text-main); font-size: 20px; }
+
+.close-modal {
+    background: #f1f5f9;
+    border: none;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--text-muted);
+}
+.close-modal:hover { background: #e2e8f0; color: var(--text-main); }
+
+.form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+/* =========================
+   PAYMENT GATEWAY
+========================= */
+.payment-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.payment-card {
+    padding: 20px 10px;
+    text-align: center;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-main);
+    transition: all 0.2s;
+}
+
+.payment-card:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.payment-summary-box {
+    text-align: center;
+    margin-bottom: 25px;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+.payment-summary-box span { color: var(--text-muted); font-weight: 500;}
+.payment-summary-box h2 { color: var(--primary-dark); font-size: 32px; margin-top: 5px;}
