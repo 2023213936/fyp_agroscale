@@ -1,20 +1,21 @@
-//Global state
+// GLOBAL STATE
 let cartItems = [];
 let currentTotal = 0;
 let currentPaymentMethod = "";
 let availableItemsList = []; // Array to store database items for the edit dropdown
 let paymentInterval = null;  // Global variable for checking QR payment status
 
-//Sounds
+// 🔊 Sounds
 const beepSound = new Audio("/static/js/scanner-beep.mp3");
 const kachingSound = new Audio("/static/js/kaching.mp3"); 
 
-//profile dropdown
+// PROFILE DROPDOWN
 function toggleProfileMenu() {
     const dropdown = document.getElementById('profileDropdown');
     dropdown.classList.toggle('hidden');
 }
 
+// Close the dropdown if the user clicks random
 window.onclick = function(event) {
     if (!event.target.closest('.profile-wrapper')) {
         const dropdown = document.getElementById('profileDropdown');
@@ -29,7 +30,7 @@ function logoutStaff() {
     window.location.href = '/logout'; 
 }
 
-//numpad
+// NUMPAD INPUT
 const inputField = document.getElementById('numpadInput');
 
 function pressKey(val) {
@@ -41,7 +42,7 @@ function clearKey() {
     inputField.value = '';
 }
 
-//add item manually
+// ADD ITEM MANUALLY (FROM DB)
 async function addManual() {
     const itemId = inputField.value;
 
@@ -90,7 +91,7 @@ async function addManual() {
     clearKey();
 }
 
-// auto detection (yolo, hx711)
+// AUTO DETECTION (YOLO, HX711)
 async function detectItem() {
     const btn = document.getElementById('btnDetect');
     const originalText = btn.innerText;
@@ -127,7 +128,7 @@ async function detectItem() {
     }
 }
 
-//update cart
+// UPDATE CART UI
 function updateCartDisplay() {
     const cartBody = document.querySelector('.cart-body');
     const totalDisplay = document.getElementById('mainTotalDue');
@@ -177,16 +178,18 @@ function roundToNearest5Cents(amount){
     return roundedAmount.toFixed(2);
 }
 
-//admin override
+// ADMIN OVERRIDE HELPER
 let adminResolve = null;
 
 function checkAdminOverride(actionName) {
     return new Promise((resolve) => {
+        // Bypass if user is already an admin
         if (typeof currentUserRole !== 'undefined' && currentUserRole.toLowerCase() === 'admin') {
             resolve(true);
             return;
         }
-        
+
+        // Store the promise resolver 
         adminResolve = resolve;
         
         // Reset modal fields
@@ -259,7 +262,7 @@ async function submitAdminAuth() {
     }
 }
 
-//delete item
+// DELETE ITEM
 async function handleDeleteAction(index) {
     const isAuthorized = await checkAdminOverride('delete');
     if (isAuthorized) {
@@ -269,7 +272,7 @@ async function handleDeleteAction(index) {
     }
 }
 
-//edit item
+// EDIT ITEM
 async function fetchItemsFromDB() {
     if (availableItemsList.length > 0) return;
 
@@ -346,7 +349,7 @@ function saveEditedItem() {
     closeEditModal();
 }
 
-//payment
+// PAYMENT MODAL CONTROL
 function openPaymentGateway() {
     if (cartItems.length === 0) {
         alert("Cart is empty!");
@@ -384,7 +387,7 @@ function backToSelectMethod() {
     document.getElementById('pg-step-select').style.display = 'block';
 }
 
-//select payment
+// SELECT PAYMENT
 function selectPaymentMethod(method) {
     currentPaymentMethod = method;
 
@@ -398,7 +401,7 @@ function selectPaymentMethod(method) {
     }
 }
 
-//cash payment
+// CASH PAYMENT
 function validateCash() {
     const tendered = parseFloat(document.getElementById('inputTendered').value);
     const roundedTotal = parseFloat(roundToNearest5Cents(currentTotal));
@@ -413,17 +416,7 @@ function processCashPayment() {
     showSuccess(change);
 }
 
-//non cash
-function processNonCash() {
-    document.getElementById('pg-step-select').style.display = 'none';
-    document.getElementById('pg-step-processing').style.display = 'block';
-
-    setTimeout(() => {
-        showSuccess(0);
-    }, 1500);
-}
-
-//qr code (toyyibpay)
+// QR CODE API
 function startQRPaymentFlow() {
     let totalText = document.getElementById('modalTotalAmount').innerText;
     let amount = parseFloat(totalText.replace('RM ', '').trim());
@@ -454,13 +447,13 @@ async function generateQRPayment(amount) {
         img.id = 'qr-image';
         img.alt = 'QR Code';
         img.style.width = '100%';
-        img.style.maxWidth = '300px'; 
+        img.style.maxWidth = '300px'; // Keeps the QR code size neat and clean
         img.style.margin = '0 auto';
         img.style.display = 'block';
         img.style.borderRadius = '8px';
         
         qrImage.parentNode.replaceChild(img, qrImage);
-        qrImage = img; 
+        qrImage = img; // Update reference
     }
 
     qrImage.src = ""; 
@@ -514,9 +507,9 @@ function checkPaymentStatus(billCode) {
             const data = await response.json();
 
             if (data.status === 'paid') {
-                clearInterval(paymentInterval); // stop polling
+                clearInterval(paymentInterval); 
                 
-                //PLAY KACHING SOUND ON SUCCESSFUL PAYMENT
+                // play sound if transaction success
                 kachingSound.play().catch(error => {
                     console.log("Browser blocked audio (Autoplay Policy):", error);
                 });
@@ -524,9 +517,11 @@ function checkPaymentStatus(billCode) {
                 // Hide QR container and show success container
                 document.getElementById('qr-container').style.display = 'none';
                 document.getElementById('pg-step-success').style.display = 'block';
-        
+                
+                // Clear any remaining change text
                 document.getElementById('displayChange').innerText = ""; 
-    
+                
+                // Set payment method to QR Pay so backend saves it correctly
                 currentPaymentMethod = "E-Wallet";
             }
         } catch (error) {
@@ -544,7 +539,7 @@ function cancelQRPayment() {
     document.getElementById('paymentButtonsGrid').style.display = 'grid'; 
 }
 
-//success screen
+// SUCCESS SCREEN
 function showSuccess(change) {
     document.getElementById('pg-step-processing').style.display = 'none';
     document.getElementById('pg-step-cash').style.display = 'none';
@@ -563,7 +558,7 @@ function showSuccess(change) {
     }
 }
 
-//complete transaction
+// COMPLETE TRANSACTION TO SAVE TO DB
 async function completeTransaction() {
     try {
         const response = await fetch('/api/checkout', {
@@ -593,13 +588,16 @@ async function completeTransaction() {
     }
 }
 
-//today's sales
+// TODAY'S SALE
 function openDailySalesModal() {
+    // Hide the profile dropdown so it's not in the way
     document.getElementById('profileDropdown').classList.add('hidden');
-
+    
+    // Show the modal
     const modal = document.getElementById('dailySalesModal');
     modal.style.display = 'flex';
-
+    
+    // Fetch the data from the backend
     fetchDailySales();
 }
 
@@ -650,6 +648,7 @@ async function fetchDailySales() {
         }
     } catch (error) {
         console.error("Error fetching shift data:", error);
+        // Updated colspan to 4 here as well
         document.getElementById('shiftSalesTableBody').innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #ef4444;">Failed to load data.</td></tr>';
     }
 }
