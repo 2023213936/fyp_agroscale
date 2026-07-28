@@ -269,7 +269,7 @@ def home():
         profile_image=session.get('profile_image')
     )
 
-#ADMIN DASHBOARD ROUTE
+#ADMIN DASHBOARD
 @app.route('/admin')
 def admin_dashboard():
     # Make sure only logged-in Admins can access this page
@@ -310,20 +310,20 @@ def admin_dashboard():
                            chart_dates=chart_dates,
                            chart_totals=chart_totals)
 
-#API ROUTE FOR CHART FILTER
+#API FOR CHART FILTER
 @app.route('/admin/api/sales_data')
 def get_sales_data():
     # Security check
     if session.get('role') != 'Admin':
         return jsonify({'error': 'Unauthorized'}), 403
 
-    # filter date (day/week/month/year)
+    # Filter date (day/week/month/year)
     period = request.args.get('period', 'day')
     
-    # capture date from calendar (format: YYYY-MM-DD)
+    # Capture date from calendar (format: YYYY-MM-DD)
     selected_date = request.args.get('date')
     
-    # use curerent date automatic
+    # use current date automatically
     if not selected_date:
         selected_date = datetime.now().strftime('%Y-%m-%d')
 
@@ -332,6 +332,7 @@ def get_sales_data():
     try:
         # Define the SQL query based on exact requirements
         if period == 'day':
+            # Last 7 Days grouped by Day 
             query = """
                 SELECT DATE(created_at) as chart_date, SUM(total_amount) as total
                 FROM receipts
@@ -342,6 +343,7 @@ def get_sales_data():
             results = conn.execute(query, (selected_date, selected_date)).fetchall()
             
         elif period == 'week':
+            # Last 30 Days grouped by Week Number 
             query = """
                 SELECT STRFTIME('%Y-W%W', created_at) as chart_date, SUM(total_amount) as total
                 FROM receipts
@@ -352,6 +354,7 @@ def get_sales_data():
             results = conn.execute(query, (selected_date, selected_date)).fetchall()
             
         elif period == 'month':
+            # Last 1 Year grouped by Month 
             query = """
                 SELECT STRFTIME('%Y-%m', created_at) as chart_date, SUM(total_amount) as total
                 FROM receipts
@@ -362,6 +365,7 @@ def get_sales_data():
             results = conn.execute(query, (selected_date, selected_date)).fetchall()
             
         elif period == 'year':
+            # All Historical Data grouped by Year 
             query = """
                 SELECT STRFTIME('%Y', created_at) as chart_date, SUM(total_amount) as total
                 FROM receipts
@@ -391,7 +395,7 @@ def get_sales_data():
     finally:
         conn.close()
 
-#API ROUTE FOR PAYMENT METHOD CHART
+#API FOR PAYMENT METHOD CHARTS
 @app.route('/admin/api/payment_methods')
 def get_payment_methods():
     if session.get('role') != 'Admin':
@@ -435,7 +439,8 @@ def get_payment_methods():
     finally:
         conn.close()
 
-#CASHIER RECEIPT DETAIL
+
+#CASHIER RECEIPTS DETAIL
 @app.route('/cashier/receipt/<int:receipt_id>')
 def cashier_receipt_detail(receipt_id):
 
@@ -446,7 +451,7 @@ def cashier_receipt_detail(receipt_id):
     conn = get_db_connection()
 
     try:
-        #GET RECEIPT INFORMATION
+        #GET RECEIPTS INFORMATION
         receipt_info = conn.execute("""
             SELECT r.*, s.staffName
             FROM receipts r
@@ -461,7 +466,7 @@ def cashier_receipt_detail(receipt_id):
             flash("Receipt not found.")
             return redirect(url_for('home'))
 
-        #GET RECEIPT ITEMS
+        #GET RECEIPTS ITEM
         items = conn.execute("""
             SELECT *
             FROM receipts_item
@@ -482,7 +487,7 @@ def cashier_receipt_detail(receipt_id):
         print(f"Receipt Detail Error: {e}")
         return f"Database Error: {e}"
     
-#ROUTES: ITEM MANAGEMENT
+#ITEM MANAGEMENT
 @app.route('/admin/registered_items')
 def registered_items():
     if session.get('role') != 'Admin':
@@ -509,14 +514,14 @@ def save_item():
 
     try:
         if item_id:
-            # EDIT EXISTING ITEM
+            # EDIT EXISTING ITEM: Run update query without the filename check
             conn.execute("""
                 UPDATE item 
                 SET itemName = ?, priceKg = ? 
                 WHERE itemId = ?
             """, (item_name, priceKg, item_id))
         else:
-            # ADD NEW ITEM
+            # ADD NEW ITEM: Let the database auto-generate the itemId
             conn.execute("""
                 INSERT INTO item (itemName, priceKg) 
                 VALUES (?, ?)
@@ -551,7 +556,7 @@ def delete_item(item_id):
     
     return redirect(url_for('registered_items'))
     
-#ROUTES: RECEIPTS MANAGEMENT
+#RECEIPTS MANAGEMENT
 @app.route('/admin/receipts')
 def receipts_list():
     if session.get('role') != 'Admin':
@@ -576,6 +581,7 @@ def view_receipt(receipt_id):
         
     conn = get_db_connection()
     
+    # 1. Get receipts information (Total, Tarikh, Staff)
     receipt_info = conn.execute("""
         SELECT r.*, s.staffName 
         FROM receipts r 
@@ -583,6 +589,7 @@ def view_receipt(receipt_id):
         WHERE r.receiptsId = ?
     """, (receipt_id,)).fetchone()
     
+    # 2. get list item from table receipts_item
     items = conn.execute("""
         SELECT * FROM receipts_item 
         WHERE receiptsId = ?
@@ -599,7 +606,7 @@ def view_receipt(receipt_id):
                            items=items, 
                            current_user=session)
 
-#ROUTES: STAFF MANAGEMENT
+#STAFF MANAGEMENT
 @app.route('/admin/staff')
 def staff_list():
     if session.get('role') != 'Admin':
@@ -696,7 +703,7 @@ def video_feed():
     return Response(generate_frames(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
-#API ROUTES (POS SYSTEM)
+#POS SYSTEM API
 @app.route('/api/get_prices')
 def get_prices():
     try:
@@ -831,7 +838,7 @@ def verify_admin():
         # 3. Check if user exists AND is an admin (starts with A)
         if user and admin_id.startswith('A'):
             
-            # 4. Compare the passwords! 
+            # 4. Compare the passwords
             if user['password'] == password:
                 return jsonify({"success": True})
             else:
@@ -897,7 +904,7 @@ def staff_daily_sales():
         conn = get_db_connection() 
         
         # Query to get ONLY today's receipts for the logged-in staff
-        # Uses 'localtime' to match the timezone used in checkout route
+        # Uses 'localtime' to match the timezone used in your checkout route
         rows = conn.execute("""
             SELECT receiptsId, payment_method, total_amount 
             FROM receipts 
@@ -929,7 +936,7 @@ def staff_daily_sales():
         print(f"Error fetching daily sales: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-#ROUTE: USER PROFILE
+#USER PROFILE
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
     if 'staffId' not in session:
