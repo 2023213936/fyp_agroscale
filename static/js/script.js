@@ -5,7 +5,7 @@ let currentPaymentMethod = "";
 let availableItemsList = []; // Array to store database items for the edit dropdown
 let paymentInterval = null;  // Global variable for checking QR payment status
 
-// 🔊 Sounds
+// Sounds
 const beepSound = new Audio("/static/js/scanner-beep.mp3");
 const kachingSound = new Audio("/static/js/kaching.mp3"); 
 
