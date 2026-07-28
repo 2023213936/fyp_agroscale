@@ -1,3 +1,4 @@
+/* GLOBAL STYLE */
 :root {
     --primary: #0f766e;
     --primary-dark: #115e59;
@@ -30,6 +31,7 @@ body {
     flex-direction: column;
 }
 
+/* TOPBAR */
 .topbar {
     height: 65px;
     background: white;
@@ -47,6 +49,7 @@ body {
     font-size: 20px;
 }
 
+/* PROFILE DROPDOWN */
 .profile-wrapper { 
     position: relative; 
     display: inline-block; 
@@ -173,6 +176,7 @@ body {
 
 .btn-logout:hover { background: #fecaca; }
 
+/* MAIN LAYOUT */
 .pos-layout {
     display: flex;
     flex: 1;
@@ -181,6 +185,7 @@ body {
     overflow: hidden;
 }
 
+/* CAMERA (LEFT PANEL) */
 .left-panel {
     flex: 0.45;
     background: white;
@@ -256,6 +261,7 @@ body {
     cursor: not-allowed;
 }
 
+/* ROGHT PANEL */
 .right-panel {
     flex: 0.55;
     background: white;
@@ -266,6 +272,7 @@ body {
     overflow: hidden;
 }
 
+/* CART */
 .cart-wrapper {
     flex: 1;
     display: flex;
@@ -356,6 +363,7 @@ body {
     font-size: 16px;
 }
 
+/* NUMPAD */
 .input-numpad-area {
     padding: 20px;
     border-top: 1px solid var(--border);
@@ -444,6 +452,7 @@ select.pos-input {
 
 .add-btn:hover { background-color: var(--primary-dark); }
 
+/* CHECKOUT */
 .checkout-area {
     background: var(--total-bg);
     padding: 20px;
@@ -488,6 +497,7 @@ select.pos-input {
     cursor: not-allowed;
 }
 
+/* MODAL */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -540,6 +550,7 @@ select.pos-input {
     color: var(--text-muted);
 }
 
+/* PAYMENT GATEWAY */
 .payment-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
