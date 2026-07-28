@@ -370,7 +370,7 @@
             document.getElementById('dropdownMenu').classList.toggle('active');
         }
 
-        // Tutup dropdown sekiranya pengguna klik di mana-mana ruang luar
+        //close dropdown when random click
         window.onclick = function(event) {
             if (!event.target.closest('.profile-wrapper')) {
                 var dropdowns = document.getElementsByClassName("dropdown-menu");
