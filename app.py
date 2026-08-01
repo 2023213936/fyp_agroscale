@@ -12,8 +12,8 @@ from picamera2 import Picamera2
 from datetime import datetime
 
 #toyyibpay
-TOYYIBPAY_SECRET = 'qjcrrmzf-jitd-6emt-7dpl-gigetbnn8lp2'
-TOYYIBPAY_CATEGORY = 'z2akmsex'
+TOYYIBPAY_SECRET = ''
+TOYYIBPAY_CATEGORY = ''
 
 MAIL_SMTP_HOST = 'smtp.gmail.com'
 MAIL_SMTP_PORT = 587
